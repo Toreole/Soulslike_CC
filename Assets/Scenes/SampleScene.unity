@@ -132,7 +132,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 42882070}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Camera_Anchor
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -164,7 +164,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 566313976}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Visuals
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -248,7 +248,7 @@ GameObject:
   - component: {fileID: 868510356}
   - component: {fileID: 868510355}
   - component: {fileID: 868510354}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Placeholder_Capsule
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -347,7 +347,7 @@ GameObject:
   - component: {fileID: 967267841}
   - component: {fileID: 967267844}
   - component: {fileID: 967267843}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Player
   m_TagString: Untagged
   m_Icon: {fileID: -964228994112308473, guid: 0000000000000000d000000000000000, type: 0}
@@ -446,8 +446,12 @@ MonoBehaviour:
   cameraAnchor: {fileID: 42882070}
   cameraSpeed: 160
   cameraDistance: 5
-  minimumYRotation: -75
-  maximumYRotation: 80
+  minimumYRotation: -35
+  maximumYRotation: 75
+  clearanceRadius: 0.2
+  cameraCollisionMask:
+    serializedVersion: 2
+    m_Bits: 55
 --- !u!1 &1687258581
 GameObject:
   m_ObjectHideFlags: 0
@@ -460,7 +464,7 @@ GameObject:
   - component: {fileID: 1687258584}
   - component: {fileID: 1687258582}
   - component: {fileID: 1687258586}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: Main Camera
   m_TagString: MainCamera
   m_Icon: {fileID: 0}
@@ -676,7 +680,7 @@ GameObject:
   - component: {fileID: 1958954058}
   - component: {fileID: 1958954057}
   - component: {fileID: 1958954056}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: look_Direction
   m_TagString: Untagged
   m_Icon: {fileID: 0}

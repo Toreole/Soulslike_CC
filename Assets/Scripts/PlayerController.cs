@@ -19,6 +19,7 @@ namespace Soulslike
         [SerializeField] 
         private Transform visualHolder;
 
+        [Header("Camera Settings")]
         //the camera transform is moved in local space (z axis)
         [SerializeField]
         private Transform cameraTransform;
@@ -29,9 +30,15 @@ namespace Soulslike
         [SerializeField]
         private float cameraDistance = 5f;
         [SerializeField]
+        private bool invertY = true;
+        [SerializeField]
         private float minimumYRotation = -75f;
         [SerializeField]
         private float maximumYRotation = 80f;
+        [SerializeField, Tooltip("The radius of the sphere-cast towards the optimal camera position")]
+        private float clearanceRadius = 0.2f;
+        [SerializeField]
+        private LayerMask cameraCollisionMask;
 
         //camera rotation:
         /// <summary> Rotation on local X axis </summary>
@@ -53,6 +60,8 @@ namespace Soulslike
             deltaTime = Time.deltaTime;
             HandleRotation();
             HandleMovement();
+
+            HandleCameraOcclusion();
         }
 
         /// <summary>
@@ -63,7 +72,8 @@ namespace Soulslike
             //cache the rotation delta for the current timestep.
             float rotationDelta = deltaTime * cameraSpeed;
             //clamp pitch
-            pitch = Mathf.Clamp(pitch + rotationDelta * cameraRotationinput.y, minimumYRotation, maximumYRotation);
+            float pitchDelta = (invertY ? -1f : 1f) * rotationDelta * cameraRotationinput.y;
+            pitch = Mathf.Clamp(pitch + pitchDelta, minimumYRotation, maximumYRotation);
             //change yaw
             yaw += rotationDelta * cameraRotationinput.x;
             //ew euler, but its simple and works.
@@ -98,6 +108,21 @@ namespace Soulslike
 
             //move via the character controller.
             characterController.Move(move);
+        }
+
+        /// <summary>
+        /// Makes sure the camera doesnt clip through any solid colliders present.
+        /// </summary>
+        private void HandleCameraOcclusion()
+        {
+            //the ray starts at the anchor of the camera inside the player, and goes out the back.
+            Ray ray = new Ray(cameraAnchor.position, -cameraAnchor.forward);
+            float distance = cameraDistance;
+            if(Physics.SphereCast(ray, clearanceRadius, out RaycastHit hit, cameraDistance, cameraCollisionMask))
+            {
+                distance = hit.distance;
+            }
+            cameraTransform.localPosition = new Vector3(0, 0, -distance);
         }
 
         //INPUT EVENTS
