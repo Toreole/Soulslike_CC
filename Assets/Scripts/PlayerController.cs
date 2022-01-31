@@ -77,16 +77,26 @@ namespace Soulslike
         /// </summary>
         private void HandleMovement()
         {
-            //convert the input from 2D to 3D
+            //convert the input from 2D to 3D.
             Vector3 move = new Vector3(movementInput.x, 0, movementInput.y);
-            //multiply move by the speed and timestep.
-            move *= (moveSpeed * deltaTime);
 
             //the rotation on the y-axis.
             Quaternion rotation = Quaternion.Euler(0, yaw, 0);
             //apply the rotation, so the player moves relative to the cameras point of view.
             move = rotation * move;
 
+            if (movementInput != Vector2.zero) //check whether input is 0
+            {
+                //get the normalized direction from the movement vector.
+                Vector3 moveDirection = move.normalized;
+                //apply it as the "rotation" of the visual representation of the character.
+                visualHolder.forward = moveDirection;
+            }
+
+            //multiply move by the speed and timestep.
+            move *= (moveSpeed * deltaTime);
+
+            //move via the character controller.
             characterController.Move(move);
         }
 
