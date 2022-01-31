@@ -49,6 +49,11 @@ namespace Soulslike
         //deltaTime buffer to avoid getting it over and over again.
         private float deltaTime = 0f;
 
+        //gravity stuff.
+        private const float gravity = -14f;
+        private float verticalVelocity = 0f;
+        private bool isGrounded = false;
+
         //buffers for input.
         private Vector2 movementInput;
         private Vector2 cameraRotationinput;
@@ -105,9 +110,29 @@ namespace Soulslike
 
             //multiply move by the speed and timestep.
             move *= (moveSpeed * deltaTime);
+            //set the vertical velocity due to gravity.
+            move.y = verticalVelocity * deltaTime;
 
             //move via the character controller.
-            characterController.Move(move);
+            CollisionFlags collisionFlags = characterController.Move(move);
+            //check for collision from below.
+            if(collisionFlags.HasFlag(CollisionFlags.Below))
+            {
+                if(!isGrounded) //just landed on ground.
+                {
+                    isGrounded = true;
+                }
+                verticalVelocity = -2f; //default of -2f vertical velocity as to allow going downhill
+            }
+            else
+            {
+                if(isGrounded) //just left ground.
+                {
+                    isGrounded = false;
+                    verticalVelocity = -0.5f; //reset the vertical velocity to something thats not just 0.
+                }
+                verticalVelocity += gravity * deltaTime;
+            }
         }
 
         /// <summary>
