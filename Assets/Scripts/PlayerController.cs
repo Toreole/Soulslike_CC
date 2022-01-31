@@ -14,6 +14,8 @@ namespace Soulslike
         private CharacterController characterController;
         [SerializeField]
         private float moveSpeed = 3f;
+        [SerializeField]
+        private float sprintSpeed = 5.5f;
 
         //The visual holder transform is rotated, so the character looks into the movement direction
         [SerializeField] 
@@ -53,10 +55,12 @@ namespace Soulslike
         private const float gravity = -14f;
         private float verticalVelocity = 0f;
         private bool isGrounded = false;
+        private Vector3 lastGroundedMovement;
 
         //buffers for input.
         private Vector2 movementInput;
         private Vector2 cameraRotationinput;
+        private bool isSprinting = false;
 
         //Standard MonoBehaviour Messages
         private void Update()
@@ -95,21 +99,31 @@ namespace Soulslike
             //convert the input from 2D to 3D.
             Vector3 move = new Vector3(movementInput.x, 0, movementInput.y);
 
-            //the rotation on the y-axis.
-            Quaternion rotation = Quaternion.Euler(0, yaw, 0);
-            //apply the rotation, so the player moves relative to the cameras point of view.
-            move = rotation * move;
-
-            if (movementInput != Vector2.zero) //check whether input is 0
+            if (isGrounded)
             {
-                //get the normalized direction from the movement vector.
-                Vector3 moveDirection = move.normalized;
-                //apply it as the "rotation" of the visual representation of the character.
-                visualHolder.forward = moveDirection;
-            }
+                //the rotation on the y-axis.
+                Quaternion rotation = Quaternion.Euler(0, yaw, 0);
+                //apply the rotation, so the player moves relative to the cameras point of view.
+                move = rotation * move;
 
-            //multiply move by the speed and timestep.
-            move *= (moveSpeed * deltaTime);
+                if (movementInput != Vector2.zero) //check whether input is 0
+                {
+                    //get the normalized direction from the movement vector.
+                    Vector3 moveDirection = move.normalized;
+                    //apply it as the "rotation" of the visual representation of the character.
+                    visualHolder.forward = moveDirection;
+                }
+
+                //multiply move by the speed and timestep.
+                move *= ((isSprinting ? sprintSpeed : moveSpeed) * deltaTime);
+                //set the last grounded movement.
+                lastGroundedMovement = move;
+            }
+            else //in the air
+            {
+                //override the move vector with the last speed we have saved.
+                move = lastGroundedMovement;
+            }
             //set the vertical velocity due to gravity.
             move.y = verticalVelocity * deltaTime;
 
@@ -173,6 +187,14 @@ namespace Soulslike
         public void OnCameraRotate(InputValue input)
         {
             cameraRotationinput = input.Get<Vector2>();
+        }
+
+        /// <summary>
+        /// Receives the new input value for sprinting, when input changes.
+        /// </summary>
+        public void OnSprint(InputValue input)
+        {
+            isSprinting = input.Get<float>() > 0;
         }
 
     }
