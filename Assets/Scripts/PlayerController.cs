@@ -47,6 +47,8 @@ namespace Soulslike
         private float pitch = 0f;
         /// <summary> Rotation on global y axis </summary>
         private float yaw = 0f;
+        //the last distance the camera was using.
+        private float currentCameraDistance = 5f;
 
         //deltaTime buffer to avoid getting it over and over again.
         private float deltaTime = 0f;
@@ -161,7 +163,16 @@ namespace Soulslike
             {
                 distance = hit.distance;
             }
-            cameraTransform.localPosition = new Vector3(0, 0, -distance);
+            //zoom back out slowly
+            if(distance > currentCameraDistance)
+            {
+                currentCameraDistance = currentCameraDistance + distance * deltaTime; //ew
+            }
+            else //but clip in instantly
+            {
+                currentCameraDistance = distance;
+            }
+            cameraTransform.localPosition = new Vector3(0, 0, -currentCameraDistance);
         }
 
         //INPUT EVENTS
