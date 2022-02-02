@@ -147,6 +147,7 @@ namespace Soulslike
                 if(!isGrounded) //just landed on ground.
                 {
                     isGrounded = true;
+                    animator.SetBool("isGrounded", true);
                 }
                 verticalVelocity = -2f; //default of -2f vertical velocity as to allow going downhill
             }
@@ -155,6 +156,7 @@ namespace Soulslike
                 if(isGrounded) //just left ground.
                 {
                     isGrounded = false;
+                    animator.SetBool("isGrounded", false);
                     verticalVelocity = -0.5f; //reset the vertical velocity to something thats not just 0.
                 }
                 verticalVelocity += gravity * deltaTime;
