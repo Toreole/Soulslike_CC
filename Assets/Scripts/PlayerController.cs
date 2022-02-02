@@ -16,6 +16,8 @@ namespace Soulslike
         private float moveSpeed = 3f;
         [SerializeField]
         private float sprintSpeed = 5.5f;
+        [SerializeField]
+        private Animator animator;
 
         //The visual holder transform is rotated, so the character looks into the movement direction
         [SerializeField] 
@@ -105,20 +107,27 @@ namespace Soulslike
             {
                 //the rotation on the y-axis.
                 Quaternion rotation = Quaternion.Euler(0, yaw, 0);
-                //apply the rotation, so the player moves relative to the cameras point of view.
-                move = rotation * move;
 
+                //multiply move by the speed and timestep.
+                move *= (isSprinting ? sprintSpeed : moveSpeed);
+                //apply the rotation, so the player moves relative to the cameras point of view.
+                //this effectively transforms the vector from local space (of camera) to worldspace.
+                move = rotation * move;
+                
                 if (movementInput != Vector2.zero) //check whether input is 0
                 {
                     //get the normalized direction from the movement vector.
                     Vector3 moveDirection = move.normalized;
                     //apply it as the "rotation" of the visual representation of the character.
                     visualHolder.forward = moveDirection;
+                    //inverse transform the move vector to the characters local space.
+                    var relativeSpeed = visualHolder.InverseTransformVector(move);
+                    //quickly send the relative speeds to the animator.
+                    animator.SetFloat("relativeXSpeed", relativeSpeed.x);
+                    animator.SetFloat("relativeZSpeed", relativeSpeed.z);
                 }
-
-                //multiply move by the speed and timestep.
-                move *= ((isSprinting ? sprintSpeed : moveSpeed) * deltaTime);
                 //set the last grounded movement.
+                move *= deltaTime;
                 lastGroundedMovement = move;
             }
             else //in the air
@@ -126,6 +135,7 @@ namespace Soulslike
                 //override the move vector with the last speed we have saved.
                 move = lastGroundedMovement;
             }
+            animator.SetFloat("currentMoveSpeed", move.magnitude/deltaTime);
             //set the vertical velocity due to gravity.
             move.y = verticalVelocity * deltaTime;
 
@@ -179,7 +189,7 @@ namespace Soulslike
         /// <summary>
         /// Message sent by the Player Input script.
         /// </summary>
-        public void OnControlsChanged(PlayerInput playerInput)
+        public void OnControlsChanged(UnityEngine.InputSystem.PlayerInput playerInput)
         {
             Debug.Log($"Controls Changed to: {playerInput.currentControlScheme}");
         }
@@ -206,6 +216,12 @@ namespace Soulslike
         public void OnSprint(InputValue input)
         {
             isSprinting = input.Get<float>() > 0;
+        }
+
+        public void OnRoll(InputValue input)
+        {
+            Debug.Log("OnRoll");
+            animator.SetTrigger("Roll");
         }
 
     }

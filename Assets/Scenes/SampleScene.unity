@@ -160,6 +160,11 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
   m_PrefabInstance: {fileID: 550406680}
   m_PrefabAsset: {fileID: 0}
+--- !u!95 &161132396 stripped
+Animator:
+  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
+  m_PrefabInstance: {fileID: 550406680}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &550406680
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -211,6 +216,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: -7680254278892050146, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 2.8738
+      objectReference: {fileID: 0}
+    - target: {fileID: -7680254278892050146, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 2.8738
+      objectReference: {fileID: 0}
+    - target: {fileID: -7680254278892050146, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 2.8738
+      objectReference: {fileID: 0}
+    - target: {fileID: -3685692520585564748, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: -3086478328068027308, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -219,6 +240,10 @@ PrefabInstance:
       propertyPath: m_Materials.Array.data[0]
       value: 
       objectReference: {fileID: 2100000, guid: d00edbde61e5eae4cbf31345dc9944bc, type: 2}
+    - target: {fileID: 701420837181973649, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
+      propertyPath: m_AABB.m_Extent.x
+      value: 0.2
+      objectReference: {fileID: 0}
     - target: {fileID: 701420837181973649, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
       propertyPath: m_Materials.Array.data[0]
       value: 
@@ -529,6 +554,7 @@ MonoBehaviour:
   characterController: {fileID: 967267841}
   moveSpeed: 3
   sprintSpeed: 5.5
+  animator: {fileID: 161132396}
   visualHolder: {fileID: 566313976}
   cameraTransform: {fileID: 1687258585}
   cameraAnchor: {fileID: 42882070}
