@@ -18,6 +18,8 @@ namespace Soulslike
         private float sprintSpeed = 5.5f;
         [SerializeField]
         private Animator animator;
+        [SerializeField]
+        private bool animatorUsesRootMotion = false;
 
         //The visual holder transform is rotated, so the character looks into the movement direction
         [SerializeField] 
@@ -72,7 +74,14 @@ namespace Soulslike
             //cache the deltaTime.
             deltaTime = Time.deltaTime;
             HandleRotation();
-            HandleMovement();
+            if (animatorUsesRootMotion)
+            {
+                UpdateAnimator();
+            }
+            else
+            {
+                HandleMovement();
+            }
 
             HandleCameraOcclusion();
         }
@@ -92,7 +101,10 @@ namespace Soulslike
             //ew euler, but its simple and works.
             Quaternion rotation = Quaternion.Euler(pitch, yaw, 0);
             //assign it.
-            cameraAnchor.localRotation = rotation;
+            if(animatorUsesRootMotion)
+                cameraAnchor.rotation = rotation;
+            else
+                cameraAnchor.localRotation = rotation;
         }
 
         /// <summary>
@@ -164,6 +176,44 @@ namespace Soulslike
         }
 
         /// <summary>
+        /// Updates relevant information for the animator, to play the correct animations.
+        /// </summary>
+        private void UpdateAnimator()
+        {
+            var actualSpeed = (isSprinting ? sprintSpeed : moveSpeed);
+            //set up forward.
+            var forward = cameraAnchor.forward;
+            forward.y = 0;
+            forward.Normalize();
+            //right
+            var right = cameraAnchor.right;
+            Vector3 move = (movementInput.x * right + movementInput.y * forward) * actualSpeed;
+
+            animator.SetFloat("currentMoveSpeed", actualSpeed);
+
+            if (movementInput != Vector2.zero) //check whether input is 0
+            {
+                //get the normalized direction from the movement vector.
+                Vector3 moveDirection = move.normalized;
+                //apply it as the "rotation" of the visual representation of the character.
+                visualHolder.forward = moveDirection;
+                //inverse transform the move vector to the characters local space.
+                var relativeSpeed = visualHolder.InverseTransformVector(move);
+                //quickly send the relative speeds to the animator.
+                animator.SetFloat("relativeXSpeed", relativeSpeed.x);
+                animator.SetFloat("relativeZSpeed", relativeSpeed.z);
+            }
+            else
+            {
+                animator.SetFloat("currentMoveSpeed", 0);
+            }
+            //update grounded state.
+            isGrounded = characterController.collisionFlags.HasFlag(CollisionFlags.Below);
+            animator.SetBool("isGrounded", isGrounded);
+                
+        }
+
+        /// <summary>
         /// Makes sure the camera doesnt clip through any solid colliders present.
         /// </summary>
         private void HandleCameraOcclusion()
@@ -222,8 +272,22 @@ namespace Soulslike
 
         public void OnRoll(InputValue input)
         {
-            Debug.Log("OnRoll");
-            animator.SetTrigger("Roll");
+            Debug.Log("Roll");
+            if (isGrounded)
+            {
+                animator.SetTrigger("Roll");
+                Debug.Log("Roll2");
+            }
+        }
+
+        public void OnAttack()
+        {
+            animator.SetTrigger("Attack");
+        }
+
+        public void OnLockTarget()
+        {
+
         }
 
     }
