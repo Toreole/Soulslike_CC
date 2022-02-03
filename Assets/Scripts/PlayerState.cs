@@ -8,7 +8,7 @@ namespace Soulslike
 {
     internal abstract class PlayerState
     {
-        PlayerMachine machine;
+        protected PlayerMachine machine;
         public PlayerState(PlayerMachine machine)
         {
             this.machine = machine;
