@@ -19,6 +19,12 @@ namespace Soulslike
 
         private IdleState idleState;
 
+        //EDITOR ONLY
+#if UNITY_EDITOR
+        public bool showAttackHitbox;
+        public int selectedAttackIndex;
+#endif
+
         //INPUT BUFFERS
         private Vector2 movementInput;
         private bool isSprinting;
@@ -50,14 +56,15 @@ namespace Soulslike
             //this is something to do later on.
         }
 
+#if UNITY_EDITOR
         //Draw gizmos when this object is selected.
         private void OnDrawGizmosSelected()
         {
-            //Draw Gizmos for all attack definitions. dont care.
-            Gizmos.color = Color.red;
-            for (int i = 0; i < BasicAttacks.Length; i++)
+            //Draw Gizmos for the selected attack
+            if (showAttackHitbox && selectedAttackIndex < BasicAttacks.Length)
             {
-                var attack = BasicAttacks[i];
+                Gizmos.color = Color.red;
+                var attack = BasicAttacks[selectedAttackIndex];
                 if (attack != null)
                 {
                     for (int j = 0; j < attack.hitVolumes.Length; j++)
@@ -69,8 +76,10 @@ namespace Soulslike
                         }
                     }
                 }
+                
             }
         }
+#endif
 
         //PLAYERMACHINE FUNCTIONALITY
         private void CheckForStateTransition()

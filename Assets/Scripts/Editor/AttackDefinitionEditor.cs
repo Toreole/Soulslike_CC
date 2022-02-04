@@ -21,46 +21,61 @@ namespace Soulslike.EditingTools
         //"runtime"
         private bool showGizmos = true;
         private float animationPlayback;
-        private GameObject previewObject;
         private AttackDefinition attackDefinition;
         private int volumeIndex = 0;
+        private bool hasContext = false;
+        private GameObject contextObject;
 
         //Setup
         private void OnEnable()
         {
+            if(serializedObject.context != null)
+                hasContext = serializedObject.context is GameObject;
+            if (hasContext)
+                contextObject = serializedObject.context as GameObject;
+            
             //Get properties.
             attackDefinition = target as AttackDefinition;
             damageMultiplierProperty    = serializedObject.FindProperty("damageMultiplier");
             hitVolumesProperty          = serializedObject.FindProperty("hitVolumes");
             associatedAnimationProperty = serializedObject.FindProperty("associatedAnimation");
             volumeIndex = 0;
-            previewObject = null;
         }
-        /**
         public override void OnInspectorGUI()
         {
-            //base.OnInspectorGUI();
-            Undo.RecordObject(target, "Edit AttackDefinition");
-            EditorGUILayout.PropertyField(damageMultiplierProperty);
-            EditorGUILayout.PropertyField(hitVolumesProperty);
-            EditorGUILayout.PropertyField(associatedAnimationProperty);
-            serializedObject.ApplyModifiedProperties();
-            Undo.FlushUndoRecordObjects();
-
-            //the "runtime" settings.
-            previewObject = EditorGUILayout.ObjectField(previewObject, typeof(GameObject), allowSceneObjects: true) as GameObject;
-            //preview for animation in the editor, which is pretty scuffed ngl.
-            AnimationClip animation = attackDefinition.associatedAnimation;
-            if (previewObject != null && animation != null)
+            if (hasContext)
             {
-                float previousAnimTime = animationPlayback;
-                animationPlayback = EditorGUILayout.Slider("Preview Animation Time", animationPlayback, 0, 1);
-                //detect changes to animation playback
-                if(previousAnimTime != animationPlayback)
+                //base.OnInspectorGUI();
+                Undo.RecordObject(target, "Edit AttackDefinition");
+                EditorGUILayout.PropertyField(damageMultiplierProperty);
+                EditorGUILayout.PropertyField(hitVolumesProperty);
+                EditorGUILayout.PropertyField(associatedAnimationProperty);
+                serializedObject.ApplyModifiedProperties();
+                Undo.FlushUndoRecordObjects();
+
+                //preview for animation in the editor, which is pretty scuffed ngl.
+                AnimationClip animation = attackDefinition.associatedAnimation;
+                if (contextObject != null && animation != null)
                 {
-                    float timeStamp = animation.length * animationPlayback;
-                    animation.SampleAnimation(previewObject, timeStamp);
+                    float previousAnimTime = animationPlayback;
+                    animationPlayback = EditorGUILayout.Slider("Preview Animation Time", animationPlayback, 0, 1);
+                    //detect changes to animation playback
+                    if (previousAnimTime != animationPlayback)
+                    {
+                        float timeStamp = animation.length * animationPlayback;
+                        animation.SampleAnimation(contextObject, timeStamp);
+                    }
                 }
+            }
+            else
+            {
+                EditorGUILayout.HelpBox("AttackDefinition is better edited in context of an entity.", MessageType.Warning);
+                Undo.RecordObject(target, "Edit AttackDefinition");
+                EditorGUILayout.PropertyField(damageMultiplierProperty);
+                EditorGUILayout.PropertyField(hitVolumesProperty);
+                EditorGUILayout.PropertyField(associatedAnimationProperty);
+                serializedObject.ApplyModifiedProperties();
+                Undo.FlushUndoRecordObjects();
             }
 
         }
@@ -68,11 +83,13 @@ namespace Soulslike.EditingTools
         //Use Handles in the SceneGUI to define all the stuff.
         private void OnSceneGUI()
         {
+            if (!hasContext)
+                return;
             //all of this sorta requires a previewObject to work.
-            if (previewObject == null)
+            if (contextObject == null)
                 return;
             Debug.Log("Scene GUI");
-            Transform transform = previewObject.transform;
+            Transform transform = contextObject.transform;
             transform.position = Handles.PositionHandle(transform.position, transform.rotation);
             Handles.color = Color.red;
             Handles.DrawLine(transform.position, Vector3.up);
@@ -95,6 +112,6 @@ namespace Soulslike.EditingTools
             {
 
             }
-        }*/
+        }
     }
 }
