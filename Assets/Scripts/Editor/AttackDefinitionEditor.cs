@@ -40,7 +40,15 @@ namespace Soulslike.EditingTools
             hitVolumesProperty          = serializedObject.FindProperty("hitVolumes");
             associatedAnimationProperty = serializedObject.FindProperty("associatedAnimation");
             volumeIndex = 0;
+
+            Undo.undoRedoPerformed += this.Repaint;
         }
+
+        private void OnDisable()
+        {
+            Undo.undoRedoPerformed -= this.Repaint;
+        }
+
         public override void OnInspectorGUI()
         {
             if (hasContext)
@@ -81,7 +89,7 @@ namespace Soulslike.EditingTools
         }
 
         //Use Handles in the SceneGUI to define all the stuff.
-        private void OnSceneGUI()
+        internal void OnSceneGUI()
         {
             if (!hasContext)
                 return;
@@ -94,24 +102,47 @@ namespace Soulslike.EditingTools
             Handles.color = Color.red;
             Handles.DrawLine(transform.position, Vector3.up);
             Handles.DrawWireCube(Vector3.zero, Vector3.one);
-            //Draw Gizmos first
-            for(int i = 0; i < attackDefinition.hitVolumes.Length; i++)
-            {
-                attackDefinition.hitVolumes[i].DrawGizmos(transform);
-            }
-            //now do the editing tools depending on the active tool.
-            if(Tools.current == Tool.Move)
-            {
 
-            }
-            else if( Tools.current == Tool.Rotate)
+            //start recording the changes made to the attack.
+            Undo.RecordObject(target, "Edit AttackDefinition from PlayerMachine Context");
+            for (int i = 0; i < hitVolumesProperty.arraySize; i++)
             {
+                var volume = hitVolumesProperty.GetArrayElementAtIndex(i);
+                if (volume == null)
+                    continue;
+                //Find related properties
+                relativePositionProperty = volume.FindPropertyRelative("relativePosition");
+                relativeRotationProperty = volume.FindPropertyRelative("relativeRotation");
+                sizesProperty = volume.FindPropertyRelative("sizes");
+                //get the values.
+                Vector3 relativePosition = relativePositionProperty.vector3Value;
+                Quaternion relativeRotation = relativeRotationProperty.quaternionValue;
+                Vector3 sizes = sizesProperty.vector3Value;
+                //processing:
+                //relative to worldspace.
+                Vector3 worldPosition = transform.TransformPoint(relativePosition);
+                Quaternion worldRotation = transform.rotation * relativeRotation;
 
+                if (Tools.current == Tool.Move)
+                {
+                    Vector3 changedPosition = Handles.PositionHandle(worldPosition, worldRotation);
+                    //set the properties value to the position relative to the player.
+                    relativePositionProperty.vector3Value = transform.InverseTransformPoint(changedPosition);
+                }
+                else if (Tools.current == Tool.Rotate)
+                {
+                    Quaternion changedRotation = Handles.RotationHandle(relativeRotation, worldPosition);
+                    relativeRotationProperty.quaternionValue = changedRotation;
+                }
+                else if (Tools.current == Tool.Scale)
+                {
+                    Vector3 changedSize = Handles.ScaleHandle(sizes, worldPosition, worldRotation);
+                    sizesProperty.vector3Value = changedSize;
+                }
             }
-            else if(Tools.current == Tool.Scale)
-            {
 
-            }
+            serializedObject.ApplyModifiedProperties();
+            Undo.FlushUndoRecordObjects();
         }
     }
 }

@@ -15,7 +15,11 @@ MonoBehaviour:
   damageMultiplier: 1
   hitVolumes:
   - shape: 3
-    relativePosition: {x: 1, y: 1.5, z: 0}
-    relativeRotation: {x: 0.4619398, y: 0.19134171, z: 0.1913417, w: 0.8446232}
-    sizes: {x: 2, y: 1, z: 0.5}
+    relativePosition: {x: -0.13229692, y: 0.9611672, z: 0.5984814}
+    relativeRotation: {x: -0.2446367, y: 0.36294848, z: 0.10568559, w: 0.8928892}
+    sizes: {x: 0.66, y: 0.1, z: 0.9230742}
+  - shape: 3
+    relativePosition: {x: 0.29426396, y: 1.4917401, z: 0.7315779}
+    relativeRotation: {x: 0.35246402, y: -0.6420939, z: -0.2801503, w: -0.6204839}
+    sizes: {x: 0.72, y: 0.06501364, z: 0.9}
   associatedAnimation: {fileID: 7400000, guid: cdd2643e8053d5b419629acf98510a71, type: 3}

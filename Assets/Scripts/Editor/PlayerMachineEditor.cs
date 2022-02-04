@@ -16,6 +16,13 @@ namespace Soulslike.EditingTools
         //cached editor that will be an instance of the AttackDefinitionEditor.
         private Editor embeddedEditor;
 
+        //relative properties of the attackdefinition we are currently editing with the SceneGUI.
+        private SerializedProperty hitVolumesProperty;
+
+        private SerializedProperty hitVolumeSizeProperty;
+        private SerializedProperty hitVolumePositionProperty;
+        private SerializedProperty hitVolumeRotationProperty;
+
         //other runtime settings.
         private bool foldoutAttacks = false;
         private PlayerMachine playerMachine;
@@ -110,7 +117,7 @@ namespace Soulslike.EditingTools
                     //draw the button
                     if (GUILayout.Button("EDIT", smallButton))
                     {
-                        editingAttack = arrayElement;
+                        StartEditingAttack(arrayElement);
                         playerMachine.selectedAttackIndex = i;
                         playerMachine.showAttackHitbox = true;
                     }
@@ -135,6 +142,19 @@ namespace Soulslike.EditingTools
             EditorGUILayout.EndHorizontal();
         }
 
+        /// <summary>
+        /// Takes a property (index) of basicAttacks and finds the related properties for editing.
+        /// </summary>
+        private void StartEditingAttack(SerializedProperty attack)
+        {
+            editingAttack = attack;
+            if(editingAttack != null)
+            {
+                //this is an array.
+                hitVolumesProperty = attack.FindPropertyRelative("hitVolumes");
+            }
+        }
+
         private void DrawEmbeddedAttackDefinitionEditor()
         {
             EditorGUILayout.LabelField("---");
@@ -153,7 +173,8 @@ namespace Soulslike.EditingTools
 
         private void OnSceneGUI()
         {
-            //This is only for handles.
+            if (embeddedEditor != null && editingAttack != null)
+                (embeddedEditor as AttackDefinitionEditor).OnSceneGUI();
         }
     }
 }

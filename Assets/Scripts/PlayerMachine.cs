@@ -104,7 +104,7 @@ namespace Soulslike
 
         internal void SetActiveState(PlayerState state)
         {
-            activeState.OnExit();
+            activeState?.OnExit();
             activeState = state;
             activeState.OnEnter();
         }
@@ -123,7 +123,7 @@ namespace Soulslike
         }
 
         //ANIMATION EVENTS
-        public void SetIFrame(bool b)
+        public void SetIFrames(bool b)
         {
 
         }
@@ -134,6 +134,12 @@ namespace Soulslike
 
         }
         public void FootL()
+        {
+
+        }
+
+        //hit detection for melee attacks
+        public void Hit()
         {
 
         }
