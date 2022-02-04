@@ -10,6 +10,10 @@ namespace Soulslike
         [SerializeField]
         private CameraController cameraController;
 
+        //ATTACK DATA
+        [SerializeField]
+        private AttackDefinition[] basicAttacks;
+
         //ALL THE STATES
         private PlayerState activeState;
 
@@ -22,6 +26,8 @@ namespace Soulslike
 
         internal Vector2 MovementInput => movementInput;
         internal bool IsSprinting => isSprinting;
+
+        public AttackDefinition[] BasicAttacks => basicAttacks;
 
         //BUILTIN UNITY MESSAGES
         private void Start()
@@ -42,6 +48,28 @@ namespace Soulslike
         private void OnAnimatorIK(int layerIndex)
         {
             //this is something to do later on.
+        }
+
+        //Draw gizmos when this object is selected.
+        private void OnDrawGizmosSelected()
+        {
+            //Draw Gizmos for all attack definitions. dont care.
+            Gizmos.color = Color.red;
+            for (int i = 0; i < BasicAttacks.Length; i++)
+            {
+                var attack = BasicAttacks[i];
+                if (attack != null)
+                {
+                    for (int j = 0; j < attack.hitVolumes.Length; j++)
+                    {
+                        var volume = attack.hitVolumes[j];
+                        if (volume != null)
+                        {
+                            volume.DrawGizmos(transform);
+                        }
+                    }
+                }
+            }
         }
 
         //PLAYERMACHINE FUNCTIONALITY
