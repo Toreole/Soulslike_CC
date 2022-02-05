@@ -26,7 +26,6 @@ namespace Soulslike
 
         internal override void OnEnter()
         {
-            Debug.Log("AttackingState");
             //set the enter time
             enterTime = Time.time;
             //reset the attack index to 0.

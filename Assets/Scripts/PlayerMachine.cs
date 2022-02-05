@@ -28,10 +28,12 @@ namespace Soulslike
 
         //ALL THE STATES
         private PlayerState activeState;
+        private bool ignoreStatePriority = false;
 
         private IdleState idleState;
         private MovingState movingState;
         private AttackingState attackingState;
+        private RollingState rollingState;
 
         //EDITOR ONLY
 #if UNITY_EDITOR
@@ -51,12 +53,17 @@ namespace Soulslike
 
         //Allow cancelling the current animation/state with a roll?
         private bool allowRollCancel = true;
-
+        internal bool AllowRollCancel { get { return allowRollCancel; } set { allowRollCancel = value; } }
         /// <summary>
         /// Does the PlayerMachine have a currently valid roll INPUT.
         /// Determined by the button being pressed recently, and not consumed yet, while the time elapsed since the press is within the defined timeframe.
         /// </summary>
-        internal bool HasValidRollInput => rollInput && (Time.time < rollInputTime + rollInputTimeFrame);
+        internal bool HasValidRollInput 
+        {
+            get => rollInput && (Time.time < rollInputTime + rollInputTimeFrame);
+            set => rollInput = value;
+        }
+
         internal Vector2 MovementInput => movementInput;
         internal bool IsSprinting => isSprinting;
         internal float CurrentMovementSpeed
@@ -152,24 +159,34 @@ namespace Soulslike
             //2. PlayerFallState, PlayerLandState //priority 90
 
             //3. PlayerRollState //priority 80
+            if(allowRollCancel && HasValidRollInput && (activeState.Priority < 80 || ignoreStatePriority))
+            {
+                if(activeState != rollingState)
+                {
+                    SetActiveState(rollingState);
+                    //consume the roll input.
+                    HasValidRollInput = false;
+                    return;
+                }
+            }
             //4. PlayerAttackState //priority 70
-            if(shouldAttack && activeState.Priority < 70)
+            if(shouldAttack && (activeState.Priority < 70 || ignoreStatePriority))
             {
                 if(activeState != attackingState)
                 {
                     SetActiveState(attackingState);
+                    shouldAttack = false; //consume the attack input.
                     return;
                 }
                 else
                 {
                     //INCREASE THE ATTACK INDEX; ASSIGN NEW ATTACK; INCREASE ANIMATOR ATTACK PROPERTY
                 }
-                shouldAttack = false; //consume the attack input.
             }
 
             //6. PlayerMoveState //handles movement //might be able to merge with StrafeState. //priority 20
             //7. PlayerIdleState //only happens when nothing is going on, is the default state. //priority 0
-            if(movementInput != Vector2.zero && activeState.Priority < 20)
+            if(movementInput != Vector2.zero && (activeState.Priority < 20 || ignoreStatePriority))
             {
                 if (activeState != movingState)
                 {
@@ -177,7 +194,7 @@ namespace Soulslike
                     return;
                 }
             }
-            else if(activeState.Priority == 0)//if nothing else happens, go back to idle.
+            else if(activeState.Priority == 0 || ignoreStatePriority)//if nothing else happens, go back to idle.
             {
                 if (activeState != idleState)
                     SetActiveState(idleState);
@@ -192,13 +209,20 @@ namespace Soulslike
             idleState = new IdleState(this);
             movingState = new MovingState(this);
             attackingState = new AttackingState(this);
+            rollingState = new RollingState(this);
         }
 
         internal void SetActiveState(PlayerState state)
         {
             activeState?.OnExit();
             activeState = state;
+            ReclaimStateControl();
             activeState.OnEnter();
+        }
+
+        private void ReclaimStateControl()
+        {
+            ignoreStatePriority = false;
         }
 
         /// <summary>
@@ -208,7 +232,7 @@ namespace Soulslike
         internal Vector3 GetWorldSpaceInput()
         {
             if (movementInput == Vector2.zero)
-                return Vector3.zero;
+                return transform.forward; //default to the relative forward in case there is no input.
             //the initial, raw input in worldspace, without accounting for camera rotation.
             Vector3 direction = new Vector3(movementInput.x, 0, movementInput.y);
            
@@ -235,10 +259,26 @@ namespace Soulslike
 
         //ANIMATION EVENTS
 
+        /// <summary>
+        /// Releases the control of the activeState (ignore its priority over other states) to allow transitioning out of states.
+        /// </summary>
+        public void ReleaseStateControl()
+        {
+            Debug.Log("Release State Control");
+            ignoreStatePriority = true;
+        }
+
+        /// <summary>
+        /// Enables and Disables the ability to cancel out of animations/states with a roll.
+        /// </summary>
         public void SetRollEnabled(int value)
         {
             allowRollCancel = value == 1;
+            Debug.Log($"RollCancel: {allowRollCancel}");
         }
+        /// <summary>
+        /// Sets whether incoming hits should be ignored.
+        /// </summary>
         public void SetIFrames(int value)
         {
 

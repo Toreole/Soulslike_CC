@@ -22,8 +22,8 @@ namespace Soulslike
         internal override void OnEnter()
         {
             machine.UpdateRelativeAnimatorSpeedsBasedOnWorldMovement(new Vector3(0,0,0));
-            Debug.Log("IdleState");
             machine.PlayAnimationID(BasePriority);
+            machine.AllowRollCancel = true;
         }
 
         internal override void OnExit()

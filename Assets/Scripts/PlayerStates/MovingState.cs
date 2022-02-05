@@ -36,8 +36,8 @@ namespace Soulslike
 
         internal override void OnEnter()
         {
-            Debug.Log("MovingState");
             machine.PlayAnimationID(BasePriority);
+            machine.AllowRollCancel = true;
         }
 
         internal override void OnExit()
