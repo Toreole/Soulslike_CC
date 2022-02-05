@@ -10,44 +10,24 @@ namespace Soulslike
         {
         }
 
-        internal override void OnAnimatorMove()
+        public override int Priority => BasePriority;
+
+        protected override int BasePriority => 0;
+
+        internal override void OnAnimatorMove(float deltaTime)
         {
-            throw new System.NotImplementedException();
+            //Idle does not move.
         }
 
         internal override void OnEnter()
         {
-            throw new System.NotImplementedException();
-        }
-
-        internal override void OnEnterGround()
-        {
-            throw new System.NotImplementedException();
+            machine.UpdateRelativeAnimatorSpeedsBasedOnWorldMovement(new Vector3(0,0,0));
+            Debug.Log("IdleState");
         }
 
         internal override void OnExit()
         {
-            throw new System.NotImplementedException();
-        }
-
-        internal override void OnLeaveGround()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        internal override void OnPlayerDeath()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        internal override void OnReceiveHit()
-        {
-            throw new System.NotImplementedException();
-        }
-
-        internal override void OnRoll()
-        {
-            throw new System.NotImplementedException();
+            //quit doing nothing LOL
         }
     }
 }

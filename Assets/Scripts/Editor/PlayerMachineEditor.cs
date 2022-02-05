@@ -10,8 +10,14 @@ namespace Soulslike.EditingTools
         //PlayerMachine baseline.
         private SerializedProperty animatorProperty;
         private SerializedProperty cameraControllerProperty;
+        private SerializedProperty characterControllerProperty;
         //attack definitions property
         private SerializedProperty basicAttacksProperty;
+
+        //movement settings
+        private SerializedProperty walkSpeedProperty;
+        private SerializedProperty runSpeedProperty;
+        private SerializedProperty rollInputTimeFrame;
 
         //cached editor that will be an instance of the AttackDefinitionEditor.
         private Editor embeddedEditor;
@@ -27,6 +33,7 @@ namespace Soulslike.EditingTools
         private bool foldoutAttacks = false;
         private PlayerMachine playerMachine;
         private SerializedProperty editingAttack = null;
+        private bool foldoutMovement = false;
 
         //LAYOUT OPTIONS.
         static readonly GUILayoutOption smallButton = GUILayout.MaxWidth(45);
@@ -45,6 +52,11 @@ namespace Soulslike.EditingTools
             animatorProperty = serializedObject.FindProperty("animator");
             cameraControllerProperty = serializedObject.FindProperty("cameraController");
             basicAttacksProperty = serializedObject.FindProperty("basicAttacks");
+            characterControllerProperty = serializedObject.FindProperty("characterController");
+            //movement properties.
+            walkSpeedProperty = serializedObject.FindProperty("walkSpeed");
+            runSpeedProperty = serializedObject.FindProperty("runSpeed");
+            rollInputTimeFrame = serializedObject.FindProperty("rollInputTimeFrame");
             editingAttack = null;
         }
 
@@ -56,7 +68,9 @@ namespace Soulslike.EditingTools
             //The basics.
             EditorGUILayout.PropertyField(animatorProperty);
             EditorGUILayout.PropertyField(cameraControllerProperty);
-            EditorGUILayout.PropertyField(basicAttacksProperty);
+            EditorGUILayout.PropertyField(characterControllerProperty);
+            //EditorGUILayout.PropertyField(basicAttacksProperty);
+            DrawMovementProperties();
 
             DrawAttackInspector();
             Undo.FlushUndoRecordObjects();
@@ -74,18 +88,34 @@ namespace Soulslike.EditingTools
         }
 
         /// <summary>
+        /// Draws the editor for everything connected to movement.
+        /// </summary>
+        private void DrawMovementProperties()
+        {
+            if(foldoutMovement = EditorGUILayout.Foldout(foldoutMovement, "Movement Variables", true))
+            {
+                using(new EditorGUI.IndentLevelScope(1))
+                {
+                    EditorGUILayout.PropertyField(walkSpeedProperty);
+                    EditorGUILayout.PropertyField(runSpeedProperty);
+                    EditorGUILayout.PropertyField(rollInputTimeFrame);
+                }
+            }
+        }
+
+        /// <summary>
         /// Draw the basicAttacksProperty array with "EDIT" buttons on the side.
         /// </summary>
         private void DrawAttackInspector()
         {
             //Put everything in a box to at least somewhat differentiate it from everything around it.
-            using (new EditorGUILayout.VerticalScope(EditorStyles.helpBox))
+            using (new EditorGUILayout.VerticalScope())
             {
                 int arrayLength = basicAttacksProperty.arraySize;
                 if (arrayLength > 0)
                 {
                     //Foldout for the attacks array, as to not make the editor too large.
-                    foldoutAttacks = EditorGUILayout.Foldout(foldoutAttacks, "Attacks", true, EditorStyles.foldoutHeader);
+                    foldoutAttacks = EditorGUILayout.Foldout(foldoutAttacks, "Attacks", true);
                     if (foldoutAttacks)
                     {
                         using (new EditorGUI.IndentLevelScope(1))
@@ -157,7 +187,7 @@ namespace Soulslike.EditingTools
 
         private void DrawEmbeddedAttackDefinitionEditor()
         {
-            EditorGUILayout.LabelField("---");
+            EditorGUILayout.LabelField(editingAttack.displayName);
             EditorGUILayout.BeginVertical(EditorStyles.helpBox);
 
             Editor.CreateCachedEditorWithContext(targetObject: editingAttack.objectReferenceValue, (target as MonoBehaviour).gameObject, typeof(AttackDefinitionEditor), ref embeddedEditor);

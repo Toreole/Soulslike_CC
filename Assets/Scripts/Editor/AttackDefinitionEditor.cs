@@ -1,5 +1,7 @@
 ﻿using UnityEditor;
+using UnityEditor.UIElements;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace Soulslike.EditingTools
 {
@@ -22,31 +24,41 @@ namespace Soulslike.EditingTools
         private bool showGizmos = true;
         private float animationPlayback;
         private AttackDefinition attackDefinition;
-        private int volumeIndex = 0;
+
         private bool hasContext = false;
         private GameObject contextObject;
 
         //Setup
         private void OnEnable()
         {
-            if(serializedObject.context != null)
-                hasContext = serializedObject.context is GameObject;
-            if (hasContext)
-                contextObject = serializedObject.context as GameObject;
-            
             //Get properties.
             attackDefinition = target as AttackDefinition;
-            damageMultiplierProperty    = serializedObject.FindProperty("damageMultiplier");
-            hitVolumesProperty          = serializedObject.FindProperty("hitVolumes");
+            damageMultiplierProperty = serializedObject.FindProperty("damageMultiplier");
+            hitVolumesProperty = serializedObject.FindProperty("hitVolumes");
             associatedAnimationProperty = serializedObject.FindProperty("associatedAnimation");
-            volumeIndex = 0;
+            //check context.
+            if (serializedObject.context != null)
+                hasContext = serializedObject.context is GameObject;
+            if (hasContext)
+            {
+                contextObject = serializedObject.context as GameObject;
+                //if an animation is given, take the first sample.
+                if (attackDefinition.associatedAnimation != null)
+                    attackDefinition.associatedAnimation.SampleAnimation(contextObject, 0); 
+            }
 
-            Undo.undoRedoPerformed += this.Repaint;
+            Undo.undoRedoPerformed += OnUndo;
         }
 
         private void OnDisable()
         {
-            Undo.undoRedoPerformed -= this.Repaint;
+            Undo.undoRedoPerformed -= OnUndo;
+        }
+
+        private void OnUndo()
+        {
+            this.Repaint();
+            serializedObject.ApplyModifiedProperties();
         }
 
         public override void OnInspectorGUI()
@@ -96,12 +108,12 @@ namespace Soulslike.EditingTools
             //all of this sorta requires a previewObject to work.
             if (contextObject == null)
                 return;
-            Debug.Log("Scene GUI");
+            //Debug.Log("Scene GUI");
             Transform transform = contextObject.transform;
-            transform.position = Handles.PositionHandle(transform.position, transform.rotation);
-            Handles.color = Color.red;
-            Handles.DrawLine(transform.position, Vector3.up);
-            Handles.DrawWireCube(Vector3.zero, Vector3.one);
+            //transform.position = Handles.PositionHandle(transform.position, transform.rotation);
+            //Handles.color = Color.red;
+            //Handles.DrawLine(transform.position, Vector3.up);
+            //Handles.DrawWireCube(Vector3.zero, Vector3.one);
 
             //start recording the changes made to the attack.
             Undo.RecordObject(target, "Edit AttackDefinition from PlayerMachine Context");
@@ -143,6 +155,26 @@ namespace Soulslike.EditingTools
 
             serializedObject.ApplyModifiedProperties();
             Undo.FlushUndoRecordObjects();
+        }
+
+        /// <summary>
+        /// Custom Property Drawer for HitVolumes, essentially hides the transform properties.
+        /// </summary>
+        [CustomPropertyDrawer(typeof(HitVolume))]
+        public class HitVolumePropertyDrawer : PropertyDrawer
+        {
+            public override VisualElement CreatePropertyGUI(SerializedProperty property)
+            {
+                VisualElement container = new VisualElement();
+                container.Add(new PropertyField(property.FindPropertyRelative("shape")));
+                return container;
+            }
+
+            public override void OnGUI(Rect position, SerializedProperty property, GUIContent label)
+            {
+                EditorGUI.PropertyField(position, property.FindPropertyRelative("shape"), label);
+                //base.OnGUI(position, property, label);
+            }
         }
     }
 }
