@@ -37,6 +37,7 @@ namespace Soulslike
         internal override void OnEnter()
         {
             Debug.Log("MovingState");
+            machine.PlayAnimationID(BasePriority);
         }
 
         internal override void OnExit()

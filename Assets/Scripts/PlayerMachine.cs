@@ -166,7 +166,7 @@ namespace Soulslike
                 }
                 shouldAttack = false; //consume the attack input.
             }
-            //5. PlayerStrafeState //handles movement when locked onto a target. //priority 40
+
             //6. PlayerMoveState //handles movement //might be able to merge with StrafeState. //priority 20
             //7. PlayerIdleState //only happens when nothing is going on, is the default state. //priority 0
             if(movementInput != Vector2.zero && activeState.Priority < 20)
@@ -216,16 +216,30 @@ namespace Soulslike
             return cameraController.WorldToCameraXZ(direction);
         }
 
+        internal void PlayAnimationID(int id)
+        {
+            animator.SetInteger("animationID", id);
+        }
+
+        /// <summary>
+        /// Updates the relativeX and relativeZSpeed for the animator. Useed in the MovementBlendTree
+        /// </summary>
+        /// <param name="worldSpaceVelocity"></param>
         internal void UpdateRelativeAnimatorSpeedsBasedOnWorldMovement(Vector3 worldSpaceVelocity)
         {
             Vector3 relativeMovement = transform.InverseTransformVector(worldSpaceVelocity);
             animator.SetFloat("relativeXSpeed", relativeMovement.x);
             animator.SetFloat("relativeZSpeed", relativeMovement.z);
-            animator.SetFloat("currentMoveSpeed", relativeMovement.magnitude);
+            //animator.SetFloat("currentMoveSpeed", relativeMovement.magnitude);
         }
 
         //ANIMATION EVENTS
-        public void SetIFrames(bool b)
+
+        public void SetRollEnabled(int value)
+        {
+            allowRollCancel = value == 1;
+        }
+        public void SetIFrames(int value)
         {
 
         }
@@ -308,7 +322,6 @@ namespace Soulslike
         public void OnAttack()
         {
             shouldAttack = true;
-            animator.SetTrigger("Attack");
         }
 
         public void OnLockTarget()

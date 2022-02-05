@@ -14,7 +14,6 @@ namespace Soulslike
         //priority of the state
         protected abstract int BasePriority { get; }
         public abstract int Priority { get; }
-        protected bool AnimationIsDone => machine.Animator.GetCurrentAnimatorStateInfo(0).normalizedTime > 0.99f;
 
         public PlayerState(PlayerMachine machine)
         {
