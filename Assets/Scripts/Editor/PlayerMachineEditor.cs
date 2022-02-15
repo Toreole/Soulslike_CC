@@ -17,7 +17,10 @@ namespace Soulslike.EditingTools
         //movement settings
         private SerializedProperty walkSpeedProperty;
         private SerializedProperty runSpeedProperty;
-        private SerializedProperty rollInputTimeFrame;
+        private SerializedProperty rollInputProperty;
+
+        //input buffer.
+        private SerializedProperty attackInputProperty;
 
         //cached editor that will be an instance of the AttackDefinitionEditor.
         private Editor embeddedEditor;
@@ -40,7 +43,6 @@ namespace Soulslike.EditingTools
         private Texture2D darkGrayTexture;
         private GUIStyle foldoutStyle;
 
-
         //Initialize the basics for editing.
         private void OnEnable()
         {
@@ -56,7 +58,9 @@ namespace Soulslike.EditingTools
             //movement properties.
             walkSpeedProperty = serializedObject.FindProperty("walkSpeed");
             runSpeedProperty = serializedObject.FindProperty("runSpeed");
-            rollInputTimeFrame = serializedObject.FindProperty("rollInputTimeFrame");
+            rollInputProperty = serializedObject.FindProperty("rollInput");
+            //other input settings.
+            attackInputProperty = serializedObject.FindProperty("attackInput");
             editingAttack = null;
         }
 
@@ -98,7 +102,7 @@ namespace Soulslike.EditingTools
                 {
                     EditorGUILayout.PropertyField(walkSpeedProperty);
                     EditorGUILayout.PropertyField(runSpeedProperty);
-                    EditorGUILayout.PropertyField(rollInputTimeFrame);
+                    EditorGUILayout.PropertyField(rollInputProperty);
                 }
             }
         }
@@ -111,6 +115,7 @@ namespace Soulslike.EditingTools
             //Put everything in a box to at least somewhat differentiate it from everything around it.
             using (new EditorGUILayout.VerticalScope())
             {
+                //array stuff.
                 int arrayLength = basicAttacksProperty.arraySize;
                 if (arrayLength > 0)
                 {
@@ -118,6 +123,8 @@ namespace Soulslike.EditingTools
                     foldoutAttacks = EditorGUILayout.Foldout(foldoutAttacks, "Attacks", true);
                     if (foldoutAttacks)
                     {
+                        //draw the attackInput Property aswell.
+                        EditorGUILayout.PropertyField(attackInputProperty);
                         using (new EditorGUI.IndentLevelScope(1))
                         {
                             DrawAttackArray(arrayLength);

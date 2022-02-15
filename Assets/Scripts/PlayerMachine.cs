@@ -23,9 +23,7 @@ namespace Soulslike
         private float walkSpeed = 3;
         [SerializeField]
         private float runSpeed = 7;
-        [SerializeField, Tooltip("How much time can pass at max between an input for a roll, and the roll itself."), Range(0.01f, 0.25f)]
-        private float rollInputTimeFrame = 0.05f;
-
+        
         //ALL THE STATES
         private PlayerState activeState;
         private bool ignoreStatePriority = false;
@@ -46,10 +44,12 @@ namespace Soulslike
         private Vector2 movementInput;
         private bool isSprinting;
         private bool isGrounded;
-        private bool shouldAttack;
+        //BufferedInputBools need to b serialized.
+        [SerializeField]
+        private BufferedInputBool attackInput;
         //rolling needs the input press, plus the last time it was pressed.
-        private bool rollInput;
-        private float rollInputTime;
+        [SerializeField]
+        private BufferedInputBool rollInput;
 
         //Allow cancelling the current animation/state with a roll?
         private bool allowRollCancel = true;
@@ -60,8 +60,14 @@ namespace Soulslike
         /// </summary>
         internal bool HasValidRollInput 
         {
-            get => rollInput && (Time.time < rollInputTime + rollInputTimeFrame);
-            set => rollInput = value;
+            get => rollInput.IsActiveAndValid;
+            set
+            {
+                if (value)
+                    rollInput.Set();
+                else
+                    rollInput.Unset();
+            }
         }
 
         internal Vector2 MovementInput => movementInput;
@@ -170,17 +176,18 @@ namespace Soulslike
                 }
             }
             //4. PlayerAttackState //priority 70
-            if(shouldAttack && (activeState.Priority < 70 || ignoreStatePriority))
+            if(attackInput.IsActiveAndValid && (activeState.Priority < 70 || ignoreStatePriority))
             {
                 if(activeState != attackingState)
                 {
                     SetActiveState(attackingState);
-                    shouldAttack = false; //consume the attack input.
+                    attackInput.Unset(); //consume the attack input.
                     return;
                 }
                 else
                 {
                     //INCREASE THE ATTACK INDEX; ASSIGN NEW ATTACK; INCREASE ANIMATOR ATTACK PROPERTY
+                    
                 }
             }
 
@@ -352,8 +359,7 @@ namespace Soulslike
         {
             if (isGrounded)
             {
-                rollInput = input.isPressed;
-                rollInputTime = Time.time;
+                rollInput.Set();
                 //setting the animation trigger should be done in the RollingState.OnEnter
                 //animator.SetTrigger("Roll");
             }
@@ -361,7 +367,7 @@ namespace Soulslike
 
         public void OnAttack()
         {
-            shouldAttack = true;
+            attackInput.Set();
         }
 
         public void OnLockTarget()
