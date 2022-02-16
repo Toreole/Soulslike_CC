@@ -19,6 +19,13 @@ namespace Soulslike
             machine.AllowRollCancel = true;
         }
 
+        internal override PlayerState MoveNextState(PlayerMachine machine)
+        {
+            if (machine.HasValidAttackInput)
+                return new AttackingState();
+            return base.MoveNextState(machine);
+        }
+
         internal override void OnExit(PlayerMachine machine)
         {
             //quit doing nothing LOL

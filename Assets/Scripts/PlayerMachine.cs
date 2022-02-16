@@ -225,6 +225,17 @@ namespace Soulslike
             return cameraController.WorldToCameraXZ(direction);
         }
 
+        /// <summary>
+        /// Rotates the PlayerMachine transform towards the given Vector (based on transform.forward !!)
+        /// </summary>
+        internal void RotateTowards(Vector3 forwardDirection)
+        {
+            float angle = Vector3.SignedAngle(transform.forward, forwardDirection, Vector3.up);
+            float deltaAngle = Mathf.Sign(angle) * Mathf.Min(Mathf.Abs(angle), 540f * Time.deltaTime);
+            Vector3 forward = Quaternion.AngleAxis(deltaAngle, Vector3.up) * transform.forward;
+            transform.forward = forward;
+        }
+
         internal void PlayAnimationID(int id)
         {
             animator.SetInteger("animationID", id);

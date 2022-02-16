@@ -14,12 +14,12 @@ namespace Soulslike
 
         internal override void OnAnimatorMove(PlayerMachine machine, float deltaTime)
         {
-            //rotate towards stick direction
-
             //apply root motion
             machine.Animator.ApplyBuiltinRootMotion();
+            //rotate towards stick direction
+            machine.RotateTowards(machine.GetWorldSpaceInput());
             //if the player can roll cancel, that means the attack animation is "done" and returning to idle, you can start a new attack
-            if(machine.AllowRollCancel && machine.HasValidAttackInput)
+            if (machine.AllowRollCancel && machine.HasValidAttackInput)
             {
                 machine.HasValidAttackInput = false; //unset the attack input.
                 //try to increment the attackIndex.
