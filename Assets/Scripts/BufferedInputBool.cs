@@ -3,6 +3,9 @@ using UnityEngine;
 
 namespace Soulslike
 {
+    /// <summary>
+    /// A bool used specifically for player input, that buffers the input for a given duration (timeFrame) which is serialized.
+    /// </summary>
     [Serializable]
     public class BufferedInputBool
     {
@@ -12,6 +15,9 @@ namespace Soulslike
         private float inputTime;
         private bool inputActive = true;
 
+        /// <summary>
+        /// returns true only when the input is Set() and the time since the last Set is less than the allowed timeFrame.
+        /// </summary>
         public bool IsActiveAndValid
         {
             get 

@@ -35,8 +35,17 @@ namespace Soulslike
 
         //EDITOR ONLY
 #if UNITY_EDITOR
+        /// <summary>
+        /// WARNING. THIS IS ONLY TO BE USED INSIDE THE EDITOR.
+        /// </summary>
         public bool showAttackHitbox;
+        /// <summary>
+        /// WARNING. THIS IS ONLY TO BE USED INSIDE THE EDITOR.
+        /// </summary>
         public int selectedAttackIndex;
+        /// <summary>
+        /// WARNING. THIS IS ONLY TO BE USED INSIDE THE EDITOR.
+        /// </summary>
         private bool runtimeShowAttackHitbox = false;
 #endif
 
@@ -69,6 +78,17 @@ namespace Soulslike
                     rollInput.Unset();
             }
         }
+        internal bool HasValidAttackInput
+        {
+            get => attackInput.IsActiveAndValid;
+            set
+            {
+                if (value)
+                    attackInput.Set();
+                else
+                    attackInput.Unset();
+            }
+        }
 
         internal Vector2 MovementInput => movementInput;
         internal bool IsSprinting => isSprinting;
@@ -83,6 +103,7 @@ namespace Soulslike
         internal CharacterController CharacterController => characterController;
 
         public AttackDefinition[] BasicAttacks => basicAttacks;
+        internal AttackDefinition CurrentAttack { get => currentAttack; set => currentAttack = value; }
         internal Animator Animator => animator;
 
         //BUILTIN UNITY MESSAGES
@@ -101,7 +122,7 @@ namespace Soulslike
         //Pass through to the activeState.
         private void OnAnimatorMove()
         {
-            activeState.OnAnimatorMove(Time.deltaTime);
+            activeState.OnAnimatorMove(this, Time.deltaTime);
             //grounded check right after movement.
             isGrounded = characterController.collisionFlags.HasFlag(CollisionFlags.Below);
         }
@@ -158,54 +179,11 @@ namespace Soulslike
 #endif
 
         //PLAYERMACHINE FUNCTIONALITY
-        private void CheckForStateTransition()
+        private void CheckForStateTransition() 
         {
-            //this is entirely based on priority order, and the conditions that are met.
-            //1. PlayerDeathState //priority 100
-            //2. PlayerFallState, PlayerLandState //priority 90
-
-            //3. PlayerRollState //priority 80
-            if(allowRollCancel && HasValidRollInput && (activeState.Priority < 80 || ignoreStatePriority))
-            {
-                if(activeState != rollingState)
-                {
-                    SetActiveState(rollingState);
-                    //consume the roll input.
-                    HasValidRollInput = false;
-                    return;
-                }
-            }
-            //4. PlayerAttackState //priority 70
-            if(attackInput.IsActiveAndValid && (activeState.Priority < 70 || ignoreStatePriority))
-            {
-                if(activeState != attackingState)
-                {
-                    SetActiveState(attackingState);
-                    attackInput.Unset(); //consume the attack input.
-                    return;
-                }
-                else
-                {
-                    //INCREASE THE ATTACK INDEX; ASSIGN NEW ATTACK; INCREASE ANIMATOR ATTACK PROPERTY
-                    
-                }
-            }
-
-            //6. PlayerMoveState //handles movement //might be able to merge with StrafeState. //priority 20
-            //7. PlayerIdleState //only happens when nothing is going on, is the default state. //priority 0
-            if(movementInput != Vector2.zero && (activeState.Priority < 20 || ignoreStatePriority))
-            {
-                if (activeState != movingState)
-                {
-                    SetActiveState(movingState);
-                    return;
-                }
-            }
-            else if(activeState.Priority == 0 || ignoreStatePriority)//if nothing else happens, go back to idle.
-            {
-                if (activeState != idleState)
-                    SetActiveState(idleState);
-            }
+            var nextState = activeState.MoveNextState(this);
+            if (nextState != activeState) //detect change in nextState
+                SetActiveState(nextState);
         }
 
         /// <summary>
@@ -213,18 +191,18 @@ namespace Soulslike
         /// </summary>
         private void InitializeAllStates()
         {
-            idleState = new IdleState(this);
-            movingState = new MovingState(this);
-            attackingState = new AttackingState(this);
-            rollingState = new RollingState(this);
+            idleState = new IdleState();
+            movingState = new MovingState();
+            attackingState = new AttackingState();
+            rollingState = new RollingState();
         }
 
         internal void SetActiveState(PlayerState state)
         {
-            activeState?.OnExit();
+            activeState?.OnExit(this);
             activeState = state;
             ReclaimStateControl();
-            activeState.OnEnter();
+            activeState.OnEnter(this);
         }
 
         private void ReclaimStateControl()
@@ -271,8 +249,8 @@ namespace Soulslike
         /// </summary>
         public void ReleaseStateControl()
         {
-            Debug.Log("Release State Control");
-            ignoreStatePriority = true;
+            //Debug.Log("Release State Control");
+            //ignoreStatePriority = true;
         }
 
         /// <summary>
@@ -304,7 +282,7 @@ namespace Soulslike
         //hit detection for weapon attacks
         public void Hit()
         {
-            currentAttack = basicAttacks[0]; //REMOVE THIS
+            //currentAttack = basicAttacks[0]; //REMOVE THIS
             if(currentAttack != null)
             {
                 List<Collider> colliders = new List<Collider>(10);

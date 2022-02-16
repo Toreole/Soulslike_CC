@@ -4,15 +4,7 @@ namespace Soulslike
 {
     internal class MovingState : PlayerState
     {
-        public MovingState(PlayerMachine machine) : base(machine)
-        {
-        }
-
-        public override int Priority => machine.MovementInput != Vector2.zero? BasePriority : 0;
-
-        protected override int BasePriority => 20;
-
-        internal override void OnAnimatorMove(float deltaTime)
+        internal override void OnAnimatorMove(PlayerMachine machine, float deltaTime)
         {
             //get the movement input in worldspace.
             Vector3 worldDirection = machine.GetWorldSpaceInput();
@@ -34,13 +26,13 @@ namespace Soulslike
             machine.transform.forward = worldDirection;
         }
 
-        internal override void OnEnter()
+        internal override void OnEnter(PlayerMachine machine)
         {
-            machine.PlayAnimationID(BasePriority);
+            machine.PlayAnimationID(PlayerAnimationUtil.animationID_move);
             machine.AllowRollCancel = true;
         }
 
-        internal override void OnExit()
+        internal override void OnExit(PlayerMachine machine)
         {
         }
     }

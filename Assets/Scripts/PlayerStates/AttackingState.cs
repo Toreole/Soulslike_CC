@@ -7,41 +7,59 @@ namespace Soulslike
     /// </summary>
     internal class AttackingState : PlayerState
     {
-        public AttackingState(PlayerMachine machine) : base(machine)
-        {
-        }
 
         private int attackIndex = 0;
         private float enterTime = 0;
         private float TimeSinceEnter => Time.time - enterTime;
 
-        public override int Priority => (GetAttackAnimationLength() <= TimeSinceEnter)? 0 : BasePriority;
-
-        protected override int BasePriority => 70;
-
-        internal override void OnAnimatorMove(float deltaTime)
+        internal override void OnAnimatorMove(PlayerMachine machine, float deltaTime)
         {
+            //rotate towards stick direction
+
+            //apply root motion
             machine.Animator.ApplyBuiltinRootMotion();
+            //if the player can roll cancel, that means the attack animation is "done" and returning to idle, you can start a new attack
+            if(machine.AllowRollCancel && machine.HasValidAttackInput)
+            {
+                machine.HasValidAttackInput = false; //unset the attack input.
+                //try to increment the attackIndex.
+                attackIndex++;
+                attackIndex %= machine.BasicAttacks.Length;
+                {
+                    SetAttackByIndex(machine, attackIndex);
+                    machine.AllowRollCancel = false;
+                    enterTime = Time.time;
+                }
+            }
+
         }
 
-        internal override void OnEnter()
+        internal override void OnEnter(PlayerMachine machine)
         {
             //set the enter time
             enterTime = Time.time;
             //reset the attack index to 0.
-            attackIndex = 0;
+            SetAttackByIndex(machine, 0);
             //setup everything the animator needs to animate the attack.
-            machine.PlayAnimationID(BasePriority);
+            machine.PlayAnimationID(PlayerAnimationUtil.animationID_attack);
         }
 
-        internal override void OnExit()
+        private void SetAttackByIndex(PlayerMachine machine, int index)
+        {
+            attackIndex = index;
+            machine.Animator.SetInteger(PlayerAnimationUtil.paramID_attackIndex, index);
+            machine.CurrentAttack = machine.BasicAttacks[index];
+        }
+
+        internal override void OnExit(PlayerMachine machine)
         {
             enterTime = float.MaxValue; //magic
+            SetAttackByIndex(machine, 0);
         }
 
-        private float GetAttackAnimationLength()
-        {
-            return (machine.BasicAttacks[attackIndex].associatedAnimation.averageDuration);
-        }
+        //private float GetAttackAnimationLength()
+        //{
+        //    return (machine.BasicAttacks[attackIndex].associatedAnimation.length);
+        //}
     }
 }
