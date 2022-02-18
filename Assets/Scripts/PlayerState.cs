@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using PlayerFlags = Soulslike.PlayerMachine.PlayerFlags;
 
 namespace Soulslike
 {
@@ -16,7 +17,19 @@ namespace Soulslike
 
         internal virtual PlayerState MoveNextState(PlayerMachine machine)
         {
+            if(machine.HasFlag(PlayerFlags.TriesToIdle)) //default transitions for every state.
+            {
+                return (machine.MovementInput != Vector2.zero) ? new MovingState() : new IdleState();
+            }
             //if(machine.PlayerIsDead) return PlayerDeadState;
+            //if(machine.HasFlag(PlayerFlags.CanRoll) && machine.HasValidRollInput)
+            //{
+            //    return new RollingState();
+            //}
+            //else if(machine.IsGrounded == false)
+            //{
+            //    return new FallingState();
+            //}
             return this;
         }
 
@@ -32,6 +45,7 @@ namespace Soulslike
         //all the animation IDs.
         internal const int animationID_idle = 0;
         internal const int animationID_move = 20;
+        internal const int animationID_hit = 30;
         internal const int animationID_attack = 70;
         internal const int animationID_roll = 80;
         internal const int animationID_fall = 90;

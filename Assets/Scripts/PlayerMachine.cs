@@ -26,12 +26,15 @@ namespace Soulslike
         
         //ALL THE STATES
         private PlayerState activeState;
-        private bool ignoreStatePriority = false;
+        //private bool ignoreStatePriority = false;
 
-        private IdleState idleState;
-        private MovingState movingState;
-        private AttackingState attackingState;
-        private RollingState rollingState;
+        //private IdleState idleState;
+        //private MovingState movingState;
+        //private AttackingState attackingState;
+        //private RollingState rollingState;
+
+        //PLAYER FLAGS
+        private PlayerFlags flags;
 
         //EDITOR ONLY
 #if UNITY_EDITOR
@@ -99,6 +102,7 @@ namespace Soulslike
                 return isSprinting ? runSpeed : walkSpeed;
             }
         }
+        internal bool IsGrounded => isGrounded;
 
         internal CharacterController CharacterController => characterController;
 
@@ -109,9 +113,10 @@ namespace Soulslike
         //BUILTIN UNITY MESSAGES
         private void Start()
         {
-            InitializeAllStates();
+            //InitializeAllStates();
             //default to idleState as activeState.
-            SetActiveState(idleState);
+            SetActiveState(new IdleState());
+            characterController.Move(Vector3.down);
         }
 
         private void Update()
@@ -186,28 +191,22 @@ namespace Soulslike
                 SetActiveState(nextState);
         }
 
-        /// <summary>
-        /// This initializes all states that will be used.
-        /// </summary>
-        private void InitializeAllStates()
-        {
-            idleState = new IdleState();
-            movingState = new MovingState();
-            attackingState = new AttackingState();
-            rollingState = new RollingState();
-        }
+        ///// <summary>
+        ///// This initializes all states that will be used.
+        ///// </summary>
+        //private void InitializeAllStates()
+        //{
+        //    idleState = new IdleState();
+        //    movingState = new MovingState();
+        //    attackingState = new AttackingState();
+        //    rollingState = new RollingState();
+        //}
 
         internal void SetActiveState(PlayerState state)
         {
             activeState?.OnExit(this);
             activeState = state;
-            ReclaimStateControl();
             activeState.OnEnter(this);
-        }
-
-        private void ReclaimStateControl()
-        {
-            ignoreStatePriority = false;
         }
 
         /// <summary>
@@ -253,15 +252,44 @@ namespace Soulslike
             //animator.SetFloat("currentMoveSpeed", relativeMovement.magnitude);
         }
 
-        //ANIMATION EVENTS
-
-        /// <summary>
-        /// Releases the control of the activeState (ignore its priority over other states) to allow transitioning out of states.
-        /// </summary>
-        public void ReleaseStateControl()
+        //Methods for flags
+        internal void SetFlag(PlayerFlags flag)
         {
-            //Debug.Log("Release State Control");
-            //ignoreStatePriority = true;
+            flags |= flag;
+        }
+        internal void UnsetFlag(PlayerFlags flag)
+        {
+            flags &= ~flag;
+        }
+        internal void ToggleFlag(PlayerFlags flag)
+        {
+            flags ^= flag;
+        }
+        internal bool HasFlag(PlayerFlags flag)
+        {
+            return (flags & flag) != 0;
+        }
+        internal void SetFlagByName(string flagName)
+        {
+            if (string.IsNullOrWhiteSpace(flagName))
+                return;
+            SetFlag((PlayerFlags)System.Enum.Parse(typeof(PlayerFlags), flagName));
+        }
+        internal void UnsetFlagByName(string flagName)
+        {
+            if (string.IsNullOrWhiteSpace(flagName))
+                return;
+            UnsetFlag((PlayerFlags)System.Enum.Parse(typeof(PlayerFlags), flagName));
+        }
+
+        //ANIMATION EVENTS
+        /// <summary>
+        /// Once an attack animation is complete, this event will be called. enables rolling and attacking (for combos).
+        /// This happens before the TriesToIdle flag is set.
+        /// </summary>
+        public void OnAttackComplete()
+        {
+            SetFlag(PlayerFlags.CanRoll | PlayerFlags.CanAttack);
         }
 
         /// <summary>
@@ -269,6 +297,10 @@ namespace Soulslike
         /// </summary>
         public void SetRollEnabled(int value)
         {
+            if (value is 1)
+                SetFlag(PlayerFlags.CanRoll);
+            else 
+                UnsetFlag(PlayerFlags.CanRoll);
             allowRollCancel = value == 1;
             Debug.Log($"RollCancel: {allowRollCancel}");
         }
@@ -361,6 +393,21 @@ namespace Soulslike
 
         public void OnLockTarget()
         {
+
+        }
+
+        //player flags.
+        [System.Flags]
+        internal enum PlayerFlags
+        {
+            NONE = 0,
+            CanRoll          = 1 << 0, //whether the player can cancel the current state by performing a roll
+            CanMove          = 1 << 1, //whether the player is allowed to move (walk) based on input
+            CanAttack        = 1 << 2, //whether an attack can be started on this frame
+            IsLockedOnTarget = 1 << 3, //changes movement and camera behaviour
+            TriesToIdle      = 1 << 4, //whether the machine/animator tries to go back to idle (current animation is done, and can be overridden)
+            CanRotate        = 1 << 5, //whether the machine is allowed to rotate the player. 
+            //IsInvincible     = 1 << 6, //whether incoming hits should be ignored. -- not necessary for the PlayerMachine, this is handled by PlayerEntity
 
         }
     }

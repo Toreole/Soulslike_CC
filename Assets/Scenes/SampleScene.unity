@@ -3237,9 +3237,12 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa101a2b47259f64ea2352a0de21e647, type: 2}
   walkSpeed: 3
   runSpeed: 7
-  rollInputTimeFrame: 0.05
   showAttackHitbox: 0
   selectedAttackIndex: 0
+  attackInput:
+    timeFrame: 0.1
+  rollInput:
+    timeFrame: 0.1
 --- !u!114 &1490943696
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -3263,6 +3266,20 @@ MonoBehaviour:
   cameraCollisionMask:
     serializedVersion: 2
     m_Bits: 55
+--- !u!114 &1490943697
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1490943689}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 735793e0528fdec43981784df5143a23, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  playerMachine: {fileID: 1490943695}
+  baseHealth: 0
 --- !u!1 &1552046065
 GameObject:
   m_ObjectHideFlags: 0

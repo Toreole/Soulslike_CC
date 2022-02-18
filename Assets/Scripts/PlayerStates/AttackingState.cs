@@ -19,9 +19,10 @@ namespace Soulslike
             //rotate towards stick direction
             machine.RotateTowards(machine.GetWorldSpaceInput());
             //if the player can roll cancel, that means the attack animation is "done" and returning to idle, you can start a new attack
-            if (machine.AllowRollCancel && machine.HasValidAttackInput)
+            if (machine.HasFlag(PlayerMachine.PlayerFlags.CanAttack) && machine.HasValidAttackInput)
             {
                 machine.HasValidAttackInput = false; //unset the attack input.
+                machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack); //just like in OnEnter
                 //try to increment the attackIndex.
                 attackIndex++;
                 attackIndex %= machine.BasicAttacks.Length;
@@ -34,6 +35,13 @@ namespace Soulslike
 
         }
 
+        internal override PlayerState MoveNextState(PlayerMachine machine)
+        {
+            if (machine.HasValidRollInput && machine.HasFlag(PlayerMachine.PlayerFlags.CanRoll))
+                return new RollingState();
+            return base.MoveNextState(machine);
+        }
+
         internal override void OnEnter(PlayerMachine machine)
         {
             //set the enter time
@@ -42,6 +50,8 @@ namespace Soulslike
             SetAttackByIndex(machine, 0);
             //setup everything the animator needs to animate the attack.
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_attack);
+
+            machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack); //disable attack input temporarily.
         }
 
         private void SetAttackByIndex(PlayerMachine machine, int index)
