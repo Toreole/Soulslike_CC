@@ -11,14 +11,17 @@ namespace Soulslike
 
         internal override void OnAnimatorMove(PlayerMachine machine, float deltaTime)
         {
+            //rolling gets its motion from the animation.
             machine.Animator.ApplyBuiltinRootMotion();
+            //check for rollinput when rolling is allowed, this "skips" the transition to a different state, and lets it remain in the rolling state.
             if (machine.HasValidRollInput && machine.HasFlag(PlayerMachine.PlayerFlags.CanRoll))
             {
                 //input for roll given, reset the roll animation.
                 machine.Animator.SetTrigger(PlayerAnimationUtil.paramID_ReRoll);
+                //consume roll input and unset the canroll flag
                 machine.HasValidRollInput = false;
-                machine.AllowRollCancel = false;
                 machine.UnsetFlag(PlayerMachine.PlayerFlags.CanRoll);
+                //re-adjust the rolling direction. this doesnt use machine.RotateTowards to make it snappier.
                 machine.transform.forward = machine.GetWorldSpaceInput().normalized;
             }
         }
@@ -32,10 +35,9 @@ namespace Soulslike
 
         internal override void OnEnter(PlayerMachine machine)
         {
-            machine.AllowRollCancel = false;
             machine.transform.forward = machine.GetWorldSpaceInput().normalized;
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_roll);
-            machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack);
+            machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack | PlayerMachine.PlayerFlags.CanRoll);
         }
 
         internal override void OnExit(PlayerMachine machine)

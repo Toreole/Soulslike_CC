@@ -23,7 +23,9 @@ namespace Soulslike
         private float walkSpeed = 3;
         [SerializeField]
         private float runSpeed = 7;
-        
+        [SerializeField]
+        private LayerMask groundMask;
+
         //ALL THE STATES
         private PlayerState activeState;
         //private bool ignoreStatePriority = false;
@@ -55,17 +57,14 @@ namespace Soulslike
         //INPUT BUFFERS
         private Vector2 movementInput;
         private bool isSprinting;
-        private bool isGrounded;
-        //BufferedInputBools need to b serialized.
+        private bool isGrounded = true;
+        //BufferedInputBools need to be serialized for timeFrame to be freely adjustable.
         [SerializeField]
         private BufferedInputBool attackInput;
-        //rolling needs the input press, plus the last time it was pressed.
         [SerializeField]
         private BufferedInputBool rollInput;
 
-        //Allow cancelling the current animation/state with a roll?
-        private bool allowRollCancel = true;
-        internal bool AllowRollCancel { get { return allowRollCancel; } set { allowRollCancel = value; } }
+        internal bool AllowRollCancel { get { return HasFlag(PlayerFlags.CanRoll); } }
         /// <summary>
         /// Does the PlayerMachine have a currently valid roll INPUT.
         /// Determined by the button being pressed recently, and not consumed yet, while the time elapsed since the press is within the defined timeframe.
@@ -95,6 +94,9 @@ namespace Soulslike
 
         internal Vector2 MovementInput => movementInput;
         internal bool IsSprinting => isSprinting;
+        /// <summary>
+        /// Returns the current target movement speed. if IsSprinting is true, this will return sprintSpeed, otherwise the regular moveSpeed.
+        /// </summary>
         internal float CurrentMovementSpeed
         {
             get
@@ -129,12 +131,7 @@ namespace Soulslike
         {
             activeState.OnAnimatorMove(this, Time.deltaTime);
             //grounded check right after movement.
-            isGrounded = characterController.collisionFlags.HasFlag(CollisionFlags.Below);
-        }
-
-        private void OnAnimatorIK(int layerIndex)
-        {
-            //this is something to do later on.
+            CheckForGround();
         }
 
 #if UNITY_EDITOR
@@ -184,6 +181,9 @@ namespace Soulslike
 #endif
 
         //PLAYERMACHINE FUNCTIONALITY
+        /// <summary>
+        /// Calls PlayerState.MoveNextState on the activeState. Checks for a change in states, then transitions them.
+        /// </summary>
         private void CheckForStateTransition() 
         {
             var nextState = activeState.MoveNextState(this);
@@ -202,7 +202,11 @@ namespace Soulslike
         //    rollingState = new RollingState();
         //}
 
-        internal void SetActiveState(PlayerState state)
+        /// <summary>
+        /// Sets the activeState, calls OnExit and OnEnter appropriately.
+        /// </summary>
+        /// <param name="state">The new state to transition to.</param>
+        private void SetActiveState(PlayerState state)
         {
             activeState?.OnExit(this);
             activeState = state;
@@ -230,26 +234,50 @@ namespace Soulslike
         internal void RotateTowards(Vector3 forwardDirection)
         {
             float angle = Vector3.SignedAngle(transform.forward, forwardDirection, Vector3.up);
-            float deltaAngle = Mathf.Sign(angle) * Mathf.Min(Mathf.Abs(angle), 540f * Time.deltaTime);
+            float deltaAngle = Mathf.Sign(angle) * Mathf.Min(Mathf.Abs(angle), 720f * Time.deltaTime);
             Vector3 forward = Quaternion.AngleAxis(deltaAngle, Vector3.up) * transform.forward;
             transform.forward = forward;
         }
 
+        /// <summary>
+        /// A shorter way for the PlayerStates to set the animationID parameter of the animator.
+        /// </summary>
+        /// <param name="id">the id of the animation. see PlayerAnimationUtil.</param>
         internal void PlayAnimationID(int id)
         {
-            animator.SetInteger("animationID", id);
+            animator.SetInteger(PlayerAnimationUtil.paramID_animationID, id);
         }
 
         /// <summary>
         /// Updates the relativeX and relativeZSpeed for the animator. Useed in the MovementBlendTree
         /// </summary>
-        /// <param name="worldSpaceVelocity"></param>
+        /// <param name="worldSpaceVelocity">the world-space velocity that is being used to move the player.</param>
         internal void UpdateRelativeAnimatorSpeedsBasedOnWorldMovement(Vector3 worldSpaceVelocity)
         {
             Vector3 relativeMovement = transform.InverseTransformVector(worldSpaceVelocity);
             animator.SetFloat("relativeXSpeed", relativeMovement.x);
             animator.SetFloat("relativeZSpeed", relativeMovement.z);
             //animator.SetFloat("currentMoveSpeed", relativeMovement.magnitude);
+        }
+
+        /// <summary>
+        /// Checks for ground below the player in order to update isGrounded.
+        /// </summary>
+        private void CheckForGround()
+        {
+            bool lastGround = isGrounded;
+            //first, check based on the characterController collision flags.
+            isGrounded = characterController.collisionFlags.HasFlag(CollisionFlags.Below);
+            //second, do a check for a surface below the player using a raycast.
+            if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hit, 0.1f, groundMask, QueryTriggerInteraction.Ignore))
+            {
+                //the slope of the ground has a maximum.
+                isGrounded |= Vector3.Angle(hit.normal, Vector3.up) < 45;
+            }
+            if (isGrounded && !lastGround)
+                Debug.Log("landed");
+            else if (!isGrounded && lastGround)
+                Debug.Log("left ground");
         }
 
         //Methods for flags
@@ -301,18 +329,17 @@ namespace Soulslike
                 SetFlag(PlayerFlags.CanRoll);
             else 
                 UnsetFlag(PlayerFlags.CanRoll);
-            allowRollCancel = value == 1;
-            Debug.Log($"RollCancel: {allowRollCancel}");
         }
         /// <summary>
         /// Sets whether incoming hits should be ignored.
         /// </summary>
+        //NOTE: THIS SHOULD BE MOVED OVER TO PLAYERENTITY
         public void SetIFrames(int value)
         {
 
         }
 
-        //sounds
+        //SOUNDS - THESE ARE TO BE MOVED TO A SEPERATE SCRIPT, AS TO NOT OVERLOAD THIS CLASS.
         public void FootR()
         {
 
@@ -322,7 +349,15 @@ namespace Soulslike
 
         }
 
+        public void Land()
+        {
+
+        }
+
         //hit detection for weapon attacks
+        /// <summary>
+        /// Does the overlap checks for the current attack. Only to be triggered via an animation event.
+        /// </summary>
         public void Hit()
         {
             //currentAttack = basicAttacks[0]; //REMOVE THIS
@@ -376,6 +411,10 @@ namespace Soulslike
             isSprinting = input.Get<float>() > 0;
         }
 
+        /// <summary>
+        /// Sets the rollInput buffered bool when the player is grounded.
+        /// </summary>
+        /// <param name="input"></param>
         public void OnRoll(InputValue input)
         {
             if (isGrounded)
@@ -386,6 +425,9 @@ namespace Soulslike
             }
         }
 
+        /// <summary>
+        /// Sets the attackInput buffered bool.
+        /// </summary>
         public void OnAttack()
         {
             attackInput.Set();

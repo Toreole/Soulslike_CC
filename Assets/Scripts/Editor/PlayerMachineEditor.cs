@@ -18,6 +18,7 @@ namespace Soulslike.EditingTools
         private SerializedProperty walkSpeedProperty;
         private SerializedProperty runSpeedProperty;
         private SerializedProperty rollInputProperty;
+        private SerializedProperty groundMaskProperty;
 
         //input buffer.
         private SerializedProperty attackInputProperty;
@@ -59,6 +60,7 @@ namespace Soulslike.EditingTools
             walkSpeedProperty = serializedObject.FindProperty("walkSpeed");
             runSpeedProperty = serializedObject.FindProperty("runSpeed");
             rollInputProperty = serializedObject.FindProperty("rollInput");
+            groundMaskProperty = serializedObject.FindProperty("groundMask");
             //other input settings.
             attackInputProperty = serializedObject.FindProperty("attackInput");
             editingAttack = null;
@@ -103,6 +105,7 @@ namespace Soulslike.EditingTools
                     EditorGUILayout.PropertyField(walkSpeedProperty);
                     EditorGUILayout.PropertyField(runSpeedProperty);
                     EditorGUILayout.PropertyField(rollInputProperty);
+                    EditorGUILayout.PropertyField(groundMaskProperty);
                 }
             }
         }

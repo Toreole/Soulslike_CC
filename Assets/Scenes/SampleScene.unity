@@ -3237,6 +3237,9 @@ MonoBehaviour:
   - {fileID: 11400000, guid: aa101a2b47259f64ea2352a0de21e647, type: 2}
   walkSpeed: 3
   runSpeed: 7
+  groundMask:
+    serializedVersion: 2
+    m_Bits: 1
   showAttackHitbox: 0
   selectedAttackIndex: 0
   attackInput:

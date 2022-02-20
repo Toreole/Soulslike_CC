@@ -143,7 +143,7 @@
                     "id": "2e3d723a-bf47-43c6-b11c-8b099b01b936",
                     "path": "<Mouse>/delta",
                     "interactions": "",
-                    "processors": "",
+                    "processors": "ScaleVector2(x=0.1,y=0.1)",
                     "groups": "Keyboard_Mouse",
                     "action": "CameraRotate",
                     "isComposite": false,

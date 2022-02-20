@@ -9,15 +9,14 @@ namespace Soulslike
     {
 
         private int attackIndex = 0;
-        private float enterTime = 0;
-        private float TimeSinceEnter => Time.time - enterTime;
 
         internal override void OnAnimatorMove(PlayerMachine machine, float deltaTime)
         {
             //apply root motion
             machine.Animator.ApplyBuiltinRootMotion();
             //rotate towards stick direction
-            machine.RotateTowards(machine.GetWorldSpaceInput());
+            if(machine.HasFlag(PlayerMachine.PlayerFlags.CanRotate))
+                machine.RotateTowards(machine.GetWorldSpaceInput());
             //if the player can roll cancel, that means the attack animation is "done" and returning to idle, you can start a new attack
             if (machine.HasFlag(PlayerMachine.PlayerFlags.CanAttack) && machine.HasValidAttackInput)
             {
@@ -28,8 +27,8 @@ namespace Soulslike
                 attackIndex %= machine.BasicAttacks.Length;
                 {
                     SetAttackByIndex(machine, attackIndex);
-                    machine.AllowRollCancel = false;
-                    enterTime = Time.time;
+                    machine.UnsetFlag(PlayerMachine.PlayerFlags.CanRoll); //instead of machine.AllowRollCancel = false;
+                    machine.SetFlag(PlayerMachine.PlayerFlags.CanRotate);
                 }
             }
 
@@ -44,13 +43,11 @@ namespace Soulslike
 
         internal override void OnEnter(PlayerMachine machine)
         {
-            //set the enter time
-            enterTime = Time.time;
             //reset the attack index to 0.
             SetAttackByIndex(machine, 0);
             //setup everything the animator needs to animate the attack.
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_attack);
-
+            machine.SetFlag(PlayerMachine.PlayerFlags.CanRotate); //enable rotation at the start, is disabled by the animation later on.
             machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack); //disable attack input temporarily.
         }
 
@@ -63,7 +60,6 @@ namespace Soulslike
 
         internal override void OnExit(PlayerMachine machine)
         {
-            enterTime = float.MaxValue; //magic
             SetAttackByIndex(machine, 0);
         }
 

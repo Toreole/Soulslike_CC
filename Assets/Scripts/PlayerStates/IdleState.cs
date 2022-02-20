@@ -17,7 +17,6 @@ namespace Soulslike
         {
             machine.UpdateRelativeAnimatorSpeedsBasedOnWorldMovement(new Vector3(0,0,0));
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_idle);
-            machine.AllowRollCancel = true;
             machine.UnsetFlag(PlayerFlags.TriesToIdle);
             //the player can do everything in idle.
             machine.SetFlag(PlayerFlags.CanRoll | PlayerFlags.CanAttack | PlayerFlags.CanRotate);
