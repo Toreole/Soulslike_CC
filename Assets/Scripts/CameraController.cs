@@ -30,6 +30,8 @@ namespace Soulslike
         private LayerMask cameraCollisionMask;
         [SerializeField]
         private float maxEnemyDistance = 18f;
+        [SerializeField]
+        Vector3 lockedAnchorOffset = new Vector3(0, 0.5f, 0);
 
         //INPUT BUFFER
         private Vector2 cameraRotationInput;
@@ -40,7 +42,8 @@ namespace Soulslike
         private float deltaTime;
         private float currentCameraDistance;
 
-        private EnemyBase targetEnemy;
+        /// <summary> The currently selected target enemy.</summary>
+        private EnemyTarget targetEnemy;
         private Transform lookTarget;
         internal Transform LookTarget //Note: when the enemy dies, this should update.
         { 
@@ -57,7 +60,8 @@ namespace Soulslike
         //targetStack acts as a sort of "pool" for the EnemyTargets.
         private Stack<EnemyTarget> targetStack = new Stack<EnemyTarget>(15);
         private List<EnemyTarget> targetsInView = new List<EnemyTarget>(15);
-
+        //for switching targets.
+        private bool canSwitchTarget = false;
 
         internal event System.Action<Transform> OnTargetChanged;
 
@@ -71,6 +75,19 @@ namespace Soulslike
         public void OnCameraRotate(InputValue input)
         {
             cameraRotationInput = input.Get<Vector2>();
+            //when locked onto a target, enable switching once the input has returned on (0, 0)
+            if(LookTarget != null)
+            {
+                if (cameraRotationInput == Vector2.zero)
+                    canSwitchTarget = true;
+                else if(canSwitchTarget)
+                {
+                    canSwitchTarget = false;
+                    SwitchTarget(cameraRotationInput);
+                    Debug.Log("switch!");
+                }
+            }
+            
         }
 
         //LockTarget input.
@@ -85,24 +102,24 @@ namespace Soulslike
             {
                 if (targetsInView.Count == 0) //dont even try if its 0.
                     return;
-                Debug.Log("Some Enemies In View.");
-                Vector3 camPos = cameraTransform.position;
+                //Debug.Log($"{targetsInView.Count} Enemies In View.");
+                Vector3 camPos = anchor.position; //anchor position instead of camera position.
                 Vector3 camRight = anchor.right;
                 //recalculate the sqrDistance, and position for all the targetsInView.
                 for (int i = 0; i < targetsInView.Count; i++)
                     targetsInView[i].RecalculateParams(camPos, camRight);
 
                 //sort the enemies array by total distance
-                int validTargets = this.SortEnemiesByDistanceWithinMaximum(camPos);
+                int validTargets = this.SortEnemiesByDistanceWithinMaximum();
                 //sort from left to right (relative to camera)
-                this.SortEnemiesByHorizontalDistance(validTargets, camPos);
+                this.SortEnemiesByWeight(validTargets);
                 this.GetEnemiesInLineOfSightNonAlloc(possibleTargets, validTargets, camPos);
 
                 if (possibleTargets.Count == 0) //no valid target found, return
                     return;
-                Debug.Log("Valid Targets Found.");
+                //Debug.Log($"{possibleTargets.Count} Valid Targets Found.");
                 //assign the targetEnemy. should later be done with a property and onchange event to correctly check the OnEnemyDeath event to deselect the enemy as target.
-                targetEnemy = possibleTargets[0].enemy; //0th element because SortEnemiesByHorizontalDistance now sorts by least absolute distance.
+                targetEnemy = possibleTargets[0]; //0th element because SortEnemiesByHorizontalDistance now sorts by least absolute distance.
                 LookTarget = targetEnemy.transform;
             }
         }
@@ -160,7 +177,7 @@ namespace Soulslike
             }
             else //rotation behaviour when locked onto a target.
             {
-                Vector3 direction = LookTarget.position - anchor.position;
+                Vector3 direction = LookTarget.position - (anchor.position + lockedAnchorOffset);
                 direction.Normalize();
                 //Vector3 angles = Quaternion.LookRotation(direction, Vector3.up).eulerAngles;
                 //Vector3 forwardAxis = Vector3.forward;
@@ -259,11 +276,30 @@ namespace Soulslike
         }
 
         /// <summary>
+        /// Switch to a different enemy based on the look input.
+        /// </summary>
+        private void SwitchTarget(Vector2 input)
+        {
+            //sort the enemies.
+            int validTargets = this.SortEnemiesByDistanceWithinMaximum();
+            //sort from left to right (relative to camera)
+            this.SortEnemiesByAlignment(validTargets);
+            this.GetEnemiesInLineOfSightNonAlloc(possibleTargets, validTargets, anchor.position);
+
+            //the indices.
+            int indexDelta = (int)Mathf.Sign(input.x);
+            int currentIndex = possibleTargets.IndexOf(targetEnemy);
+            currentIndex = Mathf.Clamp(indexDelta + currentIndex, 0, possibleTargets.Count - 1);
+            this.targetEnemy = possibleTargets[currentIndex];
+            this.LookTarget = targetEnemy.transform;
+        }
+
+        /// <summary>
         /// Sorts the enemiesInView based on their distance from the camera.
         /// </summary>
         /// <param name="pos">The world-space position of the camera.</param>
         /// <returns>The amount of enemies that are valid for selection as target.</returns>
-        private int SortEnemiesByDistanceWithinMaximum(Vector3 pos)
+        private int SortEnemiesByDistanceWithinMaximum()
         {
             if (targetsInView.Count <= 1) //if there are one or zero enemies visible, stop.
                 return targetsInView.Count;
@@ -282,16 +318,26 @@ namespace Soulslike
         }
 
         /// <summary>
-        /// Sorts enemies based on their horizontal distance from the camera.
+        /// Sorts enemies based on their calculated weight
         /// </summary>
-        /// <param name="pos">The world-space position of the camera.</param>
         /// <param name="countToSort">the amount of items to sort, given by SortEnemiesByDistanceWithinMaximum</param>
-        private void SortEnemiesByHorizontalDistance(int countToSort, Vector3 pos)
+        private void SortEnemiesByWeight(int countToSort)
         {
             if (countToSort <= 1) //sorting one element is useless, sorting zero impossible.
                 return;
-            Vector3 right = anchor.right;
-            targetsInView.Sort(0, countToSort, new EnemyDotComparer());
+            //Vector3 right = anchor.right;
+            targetsInView.Sort(0, countToSort, new EnemyTargetComparer(EnemyTargetComparer.CompareMode.Weight));
+        }
+
+        /// <summary>
+        /// Sorts enemies based on their horizontal alignment with the camera/player
+        /// </summary>
+        /// <param name="countToSort">amount of items to sort</param>
+        private void SortEnemiesByAlignment(int countToSort)
+        {
+            if (countToSort <= 1)
+                return;
+            targetsInView.Sort(0, countToSort, new EnemyTargetComparer(EnemyTargetComparer.CompareMode.Alignment));
         }
 
         /// <summary>
@@ -308,7 +354,7 @@ namespace Soulslike
             for(int i = 0; i < countToCheck; i++)
             {
                 //skip all the ones where something is between the enemy and the camera.
-                if (Physics.Linecast(pos, targetsInView[i].transform.position, cameraCollisionMask, QueryTriggerInteraction.Ignore))
+                if (Physics.Linecast(pos, targetsInView[i].position, cameraCollisionMask, QueryTriggerInteraction.Ignore))
                     continue;
                 output.Add(targetsInView[i]);
                 count++;
@@ -319,14 +365,23 @@ namespace Soulslike
         /// <summary>
         /// Compares two EnemyBase objects based on their relative position to the camera using the Dot Product of the offset and the cmameras right vector.
         /// </summary>
-        private struct EnemyDotComparer : IComparer<EnemyTarget> //struct because this gets created for a frame and then discarded again.
+        private struct EnemyTargetComparer : IComparer<EnemyTarget> //struct because this gets created for a frame and then discarded again.
         {
+            private CompareMode mode;
+            public EnemyTargetComparer(CompareMode compareMode) => mode = compareMode;
+
             public int Compare(EnemyTarget a, EnemyTarget b)
             {
-                //Old: sorts by left to right.
-                //New: sort by absolute left ro right (center to outside) -> element 0 will be closest to center of screen.
-                return (Mathf.Abs(a.horizontalAlignment) > Mathf.Abs(b.horizontalAlignment) ? 1 : -1);
+                //Old1: sorts by left to right.
+                //Old2: sort by absolute left ro right (center to outside) -> element 0 will be closest to center of screen.
+                //New: use the weight to sort them, the closest to player/center will be element 0
+                if (mode is CompareMode.Weight)
+                    return (a.weight > b.weight) ? 1 : -1;
+                else //sort based on horizontal alignment [..., -1, 0, 1, ...] in "screenspace"
+                    return (a.horizontalAlignment > b.horizontalAlignment) ? 1 : -1;
             }
+
+            public enum CompareMode { Weight, Alignment };
         }
 
         //Could be a struct instead, but i felt like a reference type might actually be more useful here.
@@ -339,6 +394,7 @@ namespace Soulslike
             public Vector3 position;
             public float sqrDistance;
             public float horizontalAlignment;
+            public float weight;
 
             /// <summary>
             /// Recalculate position, sqrDistance, and horizontalAlignment based on the cameras position and right vector.
@@ -351,6 +407,10 @@ namespace Soulslike
                 Vector3 offset = position - camPos;
                 sqrDistance = Vector3.SqrMagnitude(offset);
                 horizontalAlignment = Vector3.Dot(camRight, offset);
+
+                //"weight" determines the order in which enemytargets are sorted later on.
+                //1/4sqrDistance * max(0.75, alignment)
+                weight = sqrDistance * 0.25f * Mathf.Max(.75f, Mathf.Abs(horizontalAlignment));
             }
 
             /// <summary>
