@@ -218,7 +218,7 @@
                 {
                     "name": "",
                     "id": "8bbe1e87-4325-4369-bda2-e6e463541677",
-                    "path": "<XInputController>/rightStick/down",
+                    "path": "<XInputController>/rightStickPress",
                     "interactions": "",
                     "processors": "",
                     "groups": "Xbox_Controller",
