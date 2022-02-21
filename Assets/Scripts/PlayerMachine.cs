@@ -111,6 +111,7 @@ namespace Soulslike
         public AttackDefinition[] BasicAttacks => basicAttacks;
         internal AttackDefinition CurrentAttack { get => currentAttack; set => currentAttack = value; }
         internal Animator Animator => animator;
+        internal Transform LockedTarget { get; set; }
 
         //BUILTIN UNITY MESSAGES
         private void Start()
@@ -119,6 +120,8 @@ namespace Soulslike
             //default to idleState as activeState.
             SetActiveState(new IdleState());
             characterController.Move(Vector3.down);
+            //add the OnTargetChanged event. No need to remove since PlayerMachine and CameraController are on the same object, and depend on each other.
+            cameraController.OnTargetChanged += OnTargetChanged; 
         }
 
         private void Update()
@@ -310,6 +313,19 @@ namespace Soulslike
             UnsetFlag((PlayerFlags)System.Enum.Parse(typeof(PlayerFlags), flagName));
         }
 
+        /// <summary>
+        /// Update the target selected by the cameraController.
+        /// </summary>
+        /// <param name="newTarget"></param>
+        private void OnTargetChanged(Transform newTarget)
+        {
+            this.LockedTarget = newTarget;
+            if (newTarget != null)
+                this.SetFlag(PlayerFlags.IsLockedOnTarget);
+            else
+                this.UnsetFlag(PlayerFlags.IsLockedOnTarget);
+        }
+
         //ANIMATION EVENTS
         /// <summary>
         /// Once an attack animation is complete, this event will be called. enables rolling and attacking (for combos).
@@ -433,10 +449,29 @@ namespace Soulslike
             attackInput.Set();
         }
 
-        public void OnLockTarget()
-        {
-
-        }
+        ///// <summary>
+        ///// Upon receiving the LockTarget input, toggle between having a target and not having one.
+        ///// </summary>
+        //public void OnLockTarget()
+        //{
+        //    if (HasFlag(PlayerFlags.IsLockedOnTarget) is false)
+        //    {
+        //        if (cameraController.TryGetTarget(out Transform target))
+        //        {
+        //            LockedTarget = target;
+        //            SetFlag(PlayerFlags.IsLockedOnTarget);
+        //            Debug.Log("Locked Target.");
+        //        }
+        //        //LockedTarget = new GameObject("temporary 000 target").transform;
+        //        //cameraController.LookTarget = LockedTarget;
+        //    }
+        //    else
+        //    {
+        //        UnsetFlag(PlayerFlags.IsLockedOnTarget);
+        //        cameraController.LookTarget = null;
+        //        Debug.Log("Removed Target.");
+        //    }
+        //}
 
         //player flags.
         [System.Flags]

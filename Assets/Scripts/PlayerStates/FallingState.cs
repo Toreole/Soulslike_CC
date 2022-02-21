@@ -41,7 +41,7 @@ namespace Soulslike
 
         internal override void OnExit(PlayerMachine machine)
         {
-
+            //TODO: fall damage should be calculated in here.
         }
     }
 }

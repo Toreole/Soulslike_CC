@@ -23,12 +23,10 @@ namespace Soulslike
             //when landing, the player cant move, attack, or rotate, but can immediately roll.
             machine.UnsetFlag(PlayerFlags.CanMove | PlayerFlags.CanAttack | PlayerFlags.CanRotate);
             machine.SetFlag(PlayerFlags.CanRoll);
-            //TODO: fall damage.
         }
 
         internal override void OnExit(PlayerMachine machine)
         {
-
         }
     }
 }
