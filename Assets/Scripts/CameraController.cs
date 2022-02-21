@@ -88,10 +88,8 @@ namespace Soulslike
                 if (possibleTargets.Count == 0) //no valid target found, return
                     return;
                 Debug.Log("Valid Targets Found.");
-                //naive implementation of finding the most in the center one; assumes that the enemies are evenly distributed across the screen.
-                int halfIndex = validTargets / 2;
                 //assign the targetEnemy. should later be done with a property and onchange event to correctly check the OnEnemyDeath event to deselect the enemy as target.
-                targetEnemy = possibleTargets[halfIndex];
+                targetEnemy = possibleTargets[0]; //0th element because SortEnemiesByHorizontalDistance now sorts by least absolute distance.
                 LookTarget = targetEnemy.transform;
             }
         }
@@ -287,7 +285,10 @@ namespace Soulslike
 
             public int Compare(EnemyBase a, EnemyBase b)
             {
-                return Vector3.Dot(a.transform.position - position, right) > Vector3.Dot(b.transform.position - position, right) ? 1 : -1;
+                //Old: sorts by left to right.
+                //return Vector3.Dot(a.transform.position - position, right) > Vector3.Dot(b.transform.position - position, right) ? 1 : -1;
+                //New: sort by absolute left ro right (center to outside) -> element 0 will be closest to center of screen.
+                return (Mathf.Abs(Vector3.Dot(a.transform.position - position, right)) > Mathf.Abs(Vector3.Dot(b.transform.position - position, right)) ? 1 : -1);
             }
         }
     }
