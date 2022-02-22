@@ -210,7 +210,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 1.288
+      value: -3.11
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
       propertyPath: m_LocalPosition.y
@@ -218,7 +218,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
       propertyPath: m_LocalPosition.z
-      value: -3.776
+      value: -4.76
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
       propertyPath: m_LocalRotation.w
@@ -3526,6 +3526,8 @@ MonoBehaviour:
     m_Bits: 55
   maxEnemyDistance: 18
   lockedAnchorOffset: {x: 0, y: 0.5, z: 0}
+  maxVelocity: 8
+  moveSmoothTime: 0.2
 --- !u!114 &1490943697
 MonoBehaviour:
   m_ObjectHideFlags: 0

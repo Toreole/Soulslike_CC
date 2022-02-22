@@ -32,6 +32,10 @@ namespace Soulslike
         private float maxEnemyDistance = 18f;
         [SerializeField]
         Vector3 lockedAnchorOffset = new Vector3(0, 0.5f, 0);
+        [SerializeField]
+        private float maxVelocity = 8;
+        [SerializeField]
+        private float moveSmoothTime = 0.6f;
 
         //INPUT BUFFER
         private Vector2 cameraRotationInput;
@@ -41,6 +45,8 @@ namespace Soulslike
         private float pitch; //x-axis.
         private float deltaTime;
         private float currentCameraDistance;
+        private Vector3 currentVelocity;
+        private float currentRotationSpeed;
 
         /// <summary> The currently selected target enemy.</summary>
         private EnemyTarget targetEnemy;
@@ -78,7 +84,7 @@ namespace Soulslike
             //when locked onto a target, enable switching once the input has returned on (0, 0)
             if(LookTarget != null)
             {
-                if (cameraRotationInput == Vector2.zero)
+                if (cameraRotationInput == Vector2.zero) //NOTE: this is EXTREMELY sensitive on mouse controls right now. only works nicely on controller.
                     canSwitchTarget = true;
                 else if(canSwitchTarget)
                 {
@@ -97,6 +103,7 @@ namespace Soulslike
             if(LookTarget) //if we have a target already, unassign it.
             {
                 LookTarget = null;
+                currentRotationSpeed = 0;
             }
             else //go search for a target.
             {
@@ -152,7 +159,9 @@ namespace Soulslike
         /// </summary>
         private void FollowPlayer()
         {
-            anchor.position = playerFollowAnchor.position;
+            //smoothdamp position because im lazy.
+            Vector3 position = Vector3.SmoothDamp(anchor.position, playerFollowAnchor.position, ref currentVelocity, moveSmoothTime, maxVelocity);
+            anchor.position = position;
         }
 
         /// <summary>
@@ -185,9 +194,11 @@ namespace Soulslike
                 //pitch = Vector3.SignedAngle(forwardAxis, direction, playerFollowAnchor.right);
                 //pitch = Mathf.Clamp(angles.x, minimumYRotation, maximumYRotation);
                 //yaw = angles.x;
-                Quaternion rotation = Quaternion.LookRotation(direction, Vector3.up);
-                anchor.rotation = rotation;
-                yaw = rotation.eulerAngles.y;
+                Vector3 desiredRotation = Quaternion.LookRotation(direction, Vector3.up).eulerAngles;
+                //anchor.rotation = rotation;
+                yaw = Mathf.SmoothDampAngle(yaw, desiredRotation.y, ref currentRotationSpeed, .2f);
+                anchor.rotation = Quaternion.Euler(desiredRotation.x, yaw, 0);
+                //yaw = rotation.eulerAngles.y;
                 
             }
         }
