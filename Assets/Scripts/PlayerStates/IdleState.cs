@@ -19,7 +19,7 @@ namespace Soulslike
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_idle);
             machine.UnsetFlag(PlayerFlags.TriesToIdle);
             //the player can do everything in idle.
-            machine.SetFlag(PlayerFlags.CanRoll | PlayerFlags.CanAttack | PlayerFlags.CanRotate);
+            machine.SetFlag(PlayerFlags.CanRoll | PlayerFlags.CanAttack | PlayerFlags.CanRotate | PlayerFlags.CanRegenStamina);
         }
 
         internal override PlayerState MoveNextState(PlayerMachine machine)

@@ -24,6 +24,16 @@ namespace Soulslike
                 direction.Normalize();
                 machine.RotateTowards(direction);
             }
+            //Stamina Management.
+            if(machine.IsSprinting) //TODO: this should be improved somehow.
+            {
+                machine.UseSprintStamina();
+                machine.UnsetFlag(PlayerFlags.CanRegenStamina); //dont regen while sprinting.
+            }
+            else
+            {
+                machine.SetFlag(PlayerFlags.CanRegenStamina); //allow regen while not sprinting.
+            }
 
             //update currentSpeed
             currentSpeed = Mathf.MoveTowards(currentSpeed, machine.CurrentMovementSpeed, 40f * deltaTime); //just use absurd acceleration, transition should be near instant but noticable.
@@ -59,7 +69,7 @@ namespace Soulslike
         {
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_move);
             machine.UnsetFlag(PlayerFlags.TriesToIdle);
-            machine.SetFlag(PlayerFlags.CanRoll | PlayerFlags.CanAttack | PlayerFlags.CanRotate);
+            machine.SetFlag(PlayerFlags.CanRoll | PlayerFlags.CanAttack | PlayerFlags.CanRotate | PlayerFlags.CanRegenStamina);
         }
 
         internal override void OnExit(PlayerMachine machine)

@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using PlayerFlags = Soulslike.PlayerMachine.PlayerFlags;
 
 namespace Soulslike
 {
@@ -15,20 +16,20 @@ namespace Soulslike
             //apply root motion
             machine.Animator.ApplyBuiltinRootMotion();
             //rotate towards stick direction
-            if(machine.HasFlag(PlayerMachine.PlayerFlags.CanRotate))
+            if(machine.HasFlag(PlayerFlags.CanRotate))
                 machine.RotateTowards(machine.GetWorldSpaceInput());
             //if the player can roll cancel, that means the attack animation is "done" and returning to idle, you can start a new attack
-            if (machine.HasFlag(PlayerMachine.PlayerFlags.CanAttack) && machine.HasValidAttackInput)
+            if (machine.HasFlag(PlayerFlags.CanAttack) && machine.HasValidAttackInput)
             {
                 machine.HasValidAttackInput = false; //unset the attack input.
-                machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack); //just like in OnEnter
+                machine.UnsetFlag(PlayerFlags.TriesToIdle | PlayerFlags.CanAttack); //just like in OnEnter
                 //try to increment the attackIndex.
                 attackIndex++;
                 attackIndex %= machine.BasicAttacks.Length;
                 {
                     SetAttackByIndex(machine, attackIndex);
-                    machine.UnsetFlag(PlayerMachine.PlayerFlags.CanRoll); //instead of machine.AllowRollCancel = false;
-                    machine.SetFlag(PlayerMachine.PlayerFlags.CanRotate);
+                    machine.UnsetFlag(PlayerFlags.CanRoll); //instead of machine.AllowRollCancel = false;
+                    machine.SetFlag(PlayerFlags.CanRotate);
                 }
             }
 
@@ -36,7 +37,7 @@ namespace Soulslike
 
         internal override PlayerState MoveNextState(PlayerMachine machine)
         {
-            if (machine.HasValidRollInput && machine.HasFlag(PlayerMachine.PlayerFlags.CanRoll))
+            if (machine.HasValidRollInput && machine.HasFlag(PlayerFlags.CanRoll))
                 return new RollingState();
             return base.MoveNextState(machine);
         }
@@ -47,8 +48,8 @@ namespace Soulslike
             SetAttackByIndex(machine, 0);
             //setup everything the animator needs to animate the attack.
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_attack);
-            machine.SetFlag(PlayerMachine.PlayerFlags.CanRotate); //enable rotation at the start, is disabled by the animation later on.
-            machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack); //disable attack input temporarily.
+            machine.SetFlag(PlayerFlags.CanRotate); //enable rotation at the start, is disabled by the animation later on.
+            machine.UnsetFlag(PlayerFlags.TriesToIdle | PlayerFlags.CanAttack | PlayerFlags.CanRegenStamina); //disable attack input temporarily.
         }
 
         private void SetAttackByIndex(PlayerMachine machine, int index)

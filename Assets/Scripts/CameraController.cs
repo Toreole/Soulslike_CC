@@ -198,6 +198,7 @@ namespace Soulslike
                 //anchor.rotation = rotation;
                 yaw = Mathf.SmoothDampAngle(yaw, desiredRotation.y, ref currentRotationSpeed, .2f);
                 anchor.rotation = Quaternion.Euler(desiredRotation.x, yaw, 0);
+                pitch = desiredRotation.x;
                 //yaw = rotation.eulerAngles.y;
                 
             }

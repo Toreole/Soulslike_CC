@@ -11,6 +11,7 @@ namespace Soulslike.EditingTools
         //AttackDefinition properties:
         private SerializedProperty damageMultiplierProperty;
         private SerializedProperty hitVolumesProperty;
+        private SerializedProperty staminaCostProperty;
         //editor only property:
         private SerializedProperty associatedAnimationProperty;
 
@@ -36,6 +37,7 @@ namespace Soulslike.EditingTools
             damageMultiplierProperty = serializedObject.FindProperty("damageMultiplier");
             hitVolumesProperty = serializedObject.FindProperty("hitVolumes");
             associatedAnimationProperty = serializedObject.FindProperty("associatedAnimation");
+            staminaCostProperty = serializedObject.FindProperty("staminaCost");
             //check context.
             if (serializedObject.context != null)
                 hasContext = serializedObject.context is GameObject;
@@ -68,6 +70,7 @@ namespace Soulslike.EditingTools
                 //base.OnInspectorGUI();
                 Undo.RecordObject(target, "Edit AttackDefinition");
                 EditorGUILayout.PropertyField(damageMultiplierProperty);
+                EditorGUILayout.PropertyField(staminaCostProperty);
                 EditorGUILayout.PropertyField(hitVolumesProperty);
                 EditorGUILayout.PropertyField(associatedAnimationProperty);
                 serializedObject.ApplyModifiedProperties();

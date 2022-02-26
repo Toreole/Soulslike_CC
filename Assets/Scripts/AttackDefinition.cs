@@ -13,6 +13,7 @@ namespace Soulslike
     {
         public float damageMultiplier;
         public HitVolume[] hitVolumes;
+        public float staminaCost;
 #if UNITY_EDITOR
         //this is pretty much editor only
         public AnimationClip associatedAnimation;

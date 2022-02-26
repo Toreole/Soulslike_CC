@@ -25,6 +25,14 @@ namespace Soulslike
         private float runSpeed = 7;
         [SerializeField]
         private LayerMask groundMask;
+        [SerializeField]
+        private float maxStamina = 100f;
+        [SerializeField]
+        private float staminaRegen = 30f;
+        [SerializeField, Tooltip("The amount of stamina consumed by each roll.")]
+        private float rollStaminaCost = 22f;
+        [SerializeField, Tooltip("The Stamina consumed PER SECOND while sprinting.")]
+        private float sprintStaminaCost = 8f;
 
         //ALL THE STATES
         private PlayerState activeState;
@@ -64,14 +72,33 @@ namespace Soulslike
         [SerializeField]
         private BufferedInputBool rollInput;
 
-        internal bool AllowRollCancel { get { return HasFlag(PlayerFlags.CanRoll); } }
+        //Stamina.
+        private float stamina;
+        private float zeroStaminaTime; //the last time, the player completely ran out of stamina.
+
+        internal float Stamina
+        {
+            get => stamina;
+            private set
+            {
+                stamina = Mathf.Clamp(value, 0, maxStamina);
+                //upon hitting zero stamina, set the time, and "disable" the sprint input
+                if (Mathf.Approximately(0, Stamina))
+                {
+                    zeroStaminaTime = Time.time;
+                    isSprinting = false;
+                }
+            }
+        }
+
+        //internal bool AllowRollCancel { get { return HasFlag(PlayerFlags.CanRoll); } }
         /// <summary>
         /// Does the PlayerMachine have a currently valid roll INPUT.
         /// Determined by the button being pressed recently, and not consumed yet, while the time elapsed since the press is within the defined timeframe.
         /// </summary>
         internal bool HasValidRollInput 
         {
-            get => rollInput.IsActiveAndValid;
+            get => rollInput.IsActiveAndValid && Stamina > 0;
             set
             {
                 if (value)
@@ -82,7 +109,7 @@ namespace Soulslike
         }
         internal bool HasValidAttackInput
         {
-            get => attackInput.IsActiveAndValid;
+            get => attackInput.IsActiveAndValid && Stamina > 0;
             set
             {
                 if (value)
@@ -93,7 +120,7 @@ namespace Soulslike
         }
 
         internal Vector2 MovementInput => movementInput;
-        internal bool IsSprinting => isSprinting;
+        internal bool IsSprinting => isSprinting && Stamina > 0;
         /// <summary>
         /// Returns the current target movement speed. if IsSprinting is true, this will return sprintSpeed, otherwise the regular moveSpeed.
         /// </summary>
@@ -101,7 +128,7 @@ namespace Soulslike
         {
             get
             {
-                return isSprinting ? runSpeed : walkSpeed;
+                return IsSprinting ? runSpeed : walkSpeed;
             }
         }
         internal bool IsGrounded => isGrounded;
@@ -120,6 +147,7 @@ namespace Soulslike
             //default to idleState as activeState.
             SetActiveState(new IdleState());
             characterController.Move(Vector3.down);
+            stamina = maxStamina;
             //add the OnTargetChanged event. No need to remove since PlayerMachine and CameraController are on the same object, and depend on each other.
             cameraController.OnTargetChanged += OnTargetChanged; 
         }
@@ -127,6 +155,7 @@ namespace Soulslike
         private void Update()
         {
             CheckForStateTransition();
+            RegenStamina();
         }
 
         //Pass through to the activeState.
@@ -264,11 +293,26 @@ namespace Soulslike
         }
 
         /// <summary>
+        /// Regen the players stamina when the CanRegenStamina flag is set active.
+        /// </summary>
+        private void RegenStamina()
+        {
+            //only regen stamina if the flag is set, and at least half a second has gone by since the player ran out completely.
+            if(this.HasFlag(PlayerFlags.CanRegenStamina) && Time.time - zeroStaminaTime > 0.5f)
+            {
+                Stamina += staminaRegen * Time.deltaTime;
+            }
+        }
+
+        internal void UseSprintStamina() => Stamina -= sprintStaminaCost * Time.deltaTime;
+        internal void UseRollStamina() => Stamina -= rollStaminaCost;
+
+        /// <summary>
         /// Checks for ground below the player in order to update isGrounded.
         /// </summary>
         private void CheckForGround()
         {
-            bool lastGround = isGrounded;
+            //bool lastGround = isGrounded;
             //first, check based on the characterController collision flags.
             isGrounded = characterController.collisionFlags.HasFlag(CollisionFlags.Below);
             //second, do a check for a surface below the player using a raycast.
@@ -277,10 +321,10 @@ namespace Soulslike
                 //the slope of the ground has a maximum.
                 isGrounded |= Vector3.Angle(hit.normal, Vector3.up) < 45;
             }
-            if (isGrounded && !lastGround)
-                Debug.Log("landed");
-            else if (!isGrounded && lastGround)
-                Debug.Log("left ground");
+            //if (isGrounded && !lastGround)
+            //    Debug.Log("landed");
+            //else if (!isGrounded && lastGround)
+            //    Debug.Log("left ground");
         }
 
         //Methods for flags
@@ -485,6 +529,7 @@ namespace Soulslike
             TriesToIdle      = 1 << 4, //whether the machine/animator tries to go back to idle (current animation is done, and can be overridden)
             CanRotate        = 1 << 5, //whether the machine is allowed to rotate the player. 
             //IsInvincible     = 1 << 6, //whether incoming hits should be ignored. -- not necessary for the PlayerMachine, this is handled by PlayerEntity
+            CanRegenStamina  = 1 << 6, //whether the machine should process the natural stamina regeneration.
 
         }
     }

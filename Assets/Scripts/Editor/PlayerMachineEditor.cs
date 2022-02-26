@@ -19,6 +19,11 @@ namespace Soulslike.EditingTools
         private SerializedProperty runSpeedProperty;
         private SerializedProperty rollInputProperty;
         private SerializedProperty groundMaskProperty;
+        private SerializedProperty maxStaminaProperty;
+        private SerializedProperty staminaRegenProperty;
+        private SerializedProperty rollStaminaCostProperty;
+        private SerializedProperty sprintStaminaCostProperty;
+
 
         //input buffer.
         private SerializedProperty attackInputProperty;
@@ -61,6 +66,10 @@ namespace Soulslike.EditingTools
             runSpeedProperty = serializedObject.FindProperty("runSpeed");
             rollInputProperty = serializedObject.FindProperty("rollInput");
             groundMaskProperty = serializedObject.FindProperty("groundMask");
+            maxStaminaProperty = serializedObject.FindProperty("maxStamina");
+            staminaRegenProperty = serializedObject.FindProperty("staminaRegen");
+            rollStaminaCostProperty = serializedObject.FindProperty("rollStaminaCost");
+            sprintStaminaCostProperty = serializedObject.FindProperty("sprintStaminaCost");
             //other input settings.
             attackInputProperty = serializedObject.FindProperty("attackInput");
             editingAttack = null;
@@ -106,6 +115,10 @@ namespace Soulslike.EditingTools
                     EditorGUILayout.PropertyField(runSpeedProperty);
                     EditorGUILayout.PropertyField(rollInputProperty);
                     EditorGUILayout.PropertyField(groundMaskProperty);
+                    EditorGUILayout.PropertyField(maxStaminaProperty);
+                    EditorGUILayout.PropertyField(staminaRegenProperty);
+                    EditorGUILayout.PropertyField(rollStaminaCostProperty);
+                    EditorGUILayout.PropertyField(sprintStaminaCostProperty);
                 }
             }
         }

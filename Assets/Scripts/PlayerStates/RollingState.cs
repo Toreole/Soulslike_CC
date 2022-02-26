@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using PlayerFlags = Soulslike.PlayerMachine.PlayerFlags;
 
 namespace Soulslike
 {
@@ -14,7 +11,7 @@ namespace Soulslike
             //rolling gets its motion from the animation.
             machine.Animator.ApplyBuiltinRootMotion();
             //check for rollinput when rolling is allowed, this "skips" the transition to a different state, and lets it remain in the rolling state.
-            if (machine.HasValidRollInput && machine.HasFlag(PlayerMachine.PlayerFlags.CanRoll))
+            if (machine.HasValidRollInput && machine.HasFlag(PlayerFlags.CanRoll))
             {
                 //input for roll given, reset the roll animation.
                 machine.Animator.SetTrigger(PlayerAnimationUtil.paramID_ReRoll);
@@ -23,6 +20,8 @@ namespace Soulslike
                 machine.UnsetFlag(PlayerMachine.PlayerFlags.CanRoll);
                 //re-adjust the rolling direction. this doesnt use machine.RotateTowards to make it snappier.
                 machine.transform.forward = machine.GetWorldSpaceInput().normalized;
+                //use stamina. 
+                machine.UseRollStamina();
             }
         }
 
@@ -37,7 +36,10 @@ namespace Soulslike
         {
             machine.transform.forward = machine.GetWorldSpaceInput().normalized;
             machine.PlayAnimationID(PlayerAnimationUtil.animationID_roll);
-            machine.UnsetFlag(PlayerMachine.PlayerFlags.TriesToIdle | PlayerMachine.PlayerFlags.CanAttack | PlayerMachine.PlayerFlags.CanRoll);
+            //while rolling, dont idle, dont attack, dont roll again, dont regen stamina.
+            machine.UnsetFlag(PlayerFlags.TriesToIdle | PlayerFlags.CanAttack | PlayerFlags.CanRoll | PlayerFlags.CanRegenStamina);
+            //use stamina.
+            machine.UseRollStamina();
         }
 
         internal override void OnExit(PlayerMachine machine)
