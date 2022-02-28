@@ -22,4 +22,5 @@ MonoBehaviour:
     relativePosition: {x: 0.29426396, y: 1.4917401, z: 0.7315779}
     relativeRotation: {x: 0.35246402, y: -0.6420939, z: -0.2801503, w: -0.6204839}
     sizes: {x: 0.72, y: 0.06501364, z: 0.9}
+  staminaCost: 10
   associatedAnimation: {fileID: 7400000, guid: cdd2643e8053d5b419629acf98510a71, type: 3}

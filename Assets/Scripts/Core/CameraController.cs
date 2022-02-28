@@ -69,7 +69,7 @@ namespace Soulslike
         //for switching targets.
         private bool canSwitchTarget = false;
 
-        internal event System.Action<Transform> OnTargetChanged;
+        public event System.Action<Transform> OnTargetChanged;
 
         //static instance.
         private static CameraController instance;
@@ -231,7 +231,7 @@ namespace Soulslike
         /// <summary>
         /// rotates a Vector on the global Y axis to align it with the XZ space of the camera.
         /// </summary>
-        internal Vector3 WorldToCameraXZ(Vector3 initial)
+        public Vector3 WorldToCameraXZ(Vector3 initial)
         {
             return Quaternion.Euler(0, yaw, 0) * initial;
         }
