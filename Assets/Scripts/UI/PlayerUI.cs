@@ -47,12 +47,14 @@ namespace Soulslike.UI
         public void OnMaxHealthChanged(float maxHealth)
         {
             float width = maxHealth * sizePerPoint;
+            healthSlider.maxValue = maxHealth;
             SetWidth(healthRect, width);
         }
 
         public void OnMaxStaminaChanged(float maxStamina)
         {
             float width = maxStamina * sizePerPoint;
+            staminaSlider.maxValue = maxStamina;
             SetWidth(staminaRect, width);
         }
 

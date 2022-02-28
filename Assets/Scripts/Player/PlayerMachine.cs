@@ -175,6 +175,12 @@ namespace Soulslike
             CheckForGround();
         }
 
+        //OnEnable.
+        private void OnEnable()
+        {
+            OnMaxStaminaChanged(maxStamina);
+        }
+
 #if UNITY_EDITOR
         //Draw gizmos when this object is selected.
         private void OnDrawGizmosSelected()

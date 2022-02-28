@@ -13,25 +13,36 @@ namespace Soulslike
         private UI.PlayerUI playerUI;
 
         //RUNTIME
+        private float maxHealth;
         private float health;
         private bool invincible;
 
         //UNITY MESSAGES
-        void Start()
+        void Awake()
         {
-            health = baseHealth;
+            maxHealth = baseHealth; //+ ...
+            health = maxHealth;
         }
 
         private void OnEnable()
         {
             playerMachine.OnStaminaChanged += playerUI.OnStaminaChanged;
             playerMachine.OnMaxStaminaChanged += playerUI.OnMaxStaminaChanged;
+            playerUI.OnMaxHealthChanged(maxHealth);
+            playerUI.OnHealthChanged(health);
         }
 
         private void OnDisable()
         {
-            
+            playerMachine.OnStaminaChanged -= playerUI.OnStaminaChanged;
+            playerMachine.OnMaxStaminaChanged -= playerUI.OnMaxStaminaChanged;
         }
+
+        //private void Update()
+        //{
+        //    //health -= 2 * Time.deltaTime;
+        //    //playerUI.OnHealthChanged(health);
+        //}
 
         //INTERFACES
         //this is designed to process incoming damage from attacks.
