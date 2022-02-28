@@ -81,15 +81,24 @@ namespace Soulslike
             get => stamina;
             private set
             {
-                stamina = Mathf.Clamp(value, 0, maxStamina);
+                value = Mathf.Clamp(value, 0, maxStamina);
+
                 //upon hitting zero stamina, set the time, and "disable" the sprint input
                 if (Mathf.Approximately(0, Stamina))
                 {
                     zeroStaminaTime = Time.time;
                     isSprinting = false;
                 }
+                //check if the stamina value has changed, if so, invoke the event.
+                if (Mathf.Approximately(stamina, value) is false)
+                    OnStaminaChanged(value);
+                stamina = value;
             }
         }
+
+        internal event System.Action<float> OnStaminaChanged;
+        internal event System.Action<float> OnMaxStaminaChanged;
+
 
         //internal bool AllowRollCancel { get { return HasFlag(PlayerFlags.CanRoll); } }
         /// <summary>

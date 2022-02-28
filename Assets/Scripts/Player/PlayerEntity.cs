@@ -9,6 +9,8 @@ namespace Soulslike
         private PlayerMachine playerMachine;
         [SerializeField]
         private float baseHealth;
+        [SerializeField]
+        private UI.PlayerUI playerUI;
 
         //RUNTIME
         private float health;
@@ -18,6 +20,17 @@ namespace Soulslike
         void Start()
         {
             health = baseHealth;
+        }
+
+        private void OnEnable()
+        {
+            playerMachine.OnStaminaChanged += playerUI.OnStaminaChanged;
+            playerMachine.OnMaxStaminaChanged += playerUI.OnMaxStaminaChanged;
+        }
+
+        private void OnDisable()
+        {
+            
         }
 
         //INTERFACES

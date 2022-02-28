@@ -1,10 +1,8 @@
 {
-    "name": "Soulslike.Player",
-    "rootNamespace": "Soulslike.Player",
+    "name": "Soulslike.UI",
+    "rootNamespace": "Soulslike.UI",
     "references": [
-        "GUID:86384b99c17f8a24fa826bd06bb617a2",
-        "GUID:75469ad4d38634e559750d17036d5f7c",
-        "GUID:afc4206bd664f96479507a0f4a11d616"
+        "GUID:86384b99c17f8a24fa826bd06bb617a2"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],

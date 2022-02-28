@@ -273,11 +273,6 @@ Transform:
   m_CorrespondingSourceObject: {fileID: -8679921383154817045, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
   m_PrefabInstance: {fileID: 550406680}
   m_PrefabAsset: {fileID: 0}
---- !u!95 &161132396 stripped
-Animator:
-  m_CorrespondingSourceObject: {fileID: 5866666021909216657, guid: 8cbc3b757bd2ad541954486f0784dbed, type: 3}
-  m_PrefabInstance: {fileID: 550406680}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &196641683
 GameObject:
   m_ObjectHideFlags: 0
@@ -2843,6 +2838,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 767617325}
+  - component: {fileID: 767617326}
   m_Layer: 5
   m_Name: Player_Resources
   m_TagString: Untagged
@@ -2872,6 +2868,21 @@ RectTransform:
   m_AnchoredPosition: {x: 370, y: -100}
   m_SizeDelta: {x: 650, y: 130}
   m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &767617326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 767617324}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 273ea9b4cb36bf549af6d69c4aef96a6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  healthSlider: {fileID: 652993021}
+  staminaSlider: {fileID: 1227486035}
+  sizePerPoint: 1
 --- !u!1 &776884618
 GameObject:
   m_ObjectHideFlags: 0
@@ -3314,23 +3325,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 45b3a309e8a703b49b5a93fed4159415, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterController: {fileID: 967267841}
-  moveSpeed: 3
-  sprintSpeed: 5.5
-  animator: {fileID: 161132396}
-  animatorUsesRootMotion: 0
-  visualHolder: {fileID: 566313976}
-  cameraTransform: {fileID: 1687258585}
-  cameraAnchor: {fileID: 42882070}
-  cameraSpeed: 160
-  cameraDistance: 5
-  invertY: 1
-  minimumYRotation: -35
-  maximumYRotation: 75
-  clearanceRadius: 0.2
-  cameraCollisionMask:
-    serializedVersion: 2
-    m_Bits: 55
 --- !u!1 &1047174683
 GameObject:
   m_ObjectHideFlags: 0
@@ -3769,8 +3763,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 132.38722, y: -55.00001}
-  m_SizeDelta: {x: 264.7744, y: 30}
+  m_AnchoredPosition: {x: 150.00003, y: -55.00001}
+  m_SizeDelta: {x: 300, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1227486035
 MonoBehaviour:
@@ -4310,6 +4304,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   playerMachine: {fileID: 1490943695}
   baseHealth: 50
+  playerUI: {fileID: 767617326}
 --- !u!1 &1552046065
 GameObject:
   m_ObjectHideFlags: 0
